@@ -8,6 +8,7 @@
 #include "globals.h"
 #include "config.h"
 #include "process.h"
+#include "utils.h"
 
 
 /* This example reads the configuration file 'example.cfg' and displays
@@ -91,26 +92,26 @@ void read_config (void)
 		track_r[i].led_off [2] = 0x00;
 
 		// rewind button
-		rewind[i].message [0] = 0x90;
-		rewind[i].message [1] = 0x42;
-		rewind[i].action = &process;
-		rewind[i].led_on [0] = 0x90;
-		rewind[i].led_on [1] = 0x42;
-		rewind[i].led_on [2] = 0x7F;
-		rewind[i].led_off [0] = 0x90;
-		rewind[i].led_off [1] = 0x42;
-		rewind[i].led_off [2] = 0x00;
+		rwd[i].message [0] = 0x90;
+		rwd[i].message [1] = 0x42;
+		rwd[i].action = &process;
+		rwd[i].led_on [0] = 0x90;
+		rwd[i].led_on [1] = 0x42;
+		rwd[i].led_on [2] = 0x7F;
+		rwd[i].led_off [0] = 0x90;
+		rwd[i].led_off [1] = 0x42;
+		rwd[i].led_off [2] = 0x00;
 
 		// forward button
-		forward[i].message [0] = 0x90;
-		forward[i].message [1] = 0x43;
-		forward[i].action = &process;
-		forward[i].led_on [0] = 0x90;
-		forward[i].led_on [1] = 0x43;
-		forward[i].led_on [2] = 0x7F;
-		forward[i].led_off [0] = 0x90;
-		forward[i].led_off [1] = 0x43;
-		forward[i].led_off [2] = 0x00;
+		fwd[i].message [0] = 0x90;
+		fwd[i].message [1] = 0x43;
+		fwd[i].action = &process;
+		fwd[i].led_on [0] = 0x90;
+		fwd[i].led_on [1] = 0x43;
+		fwd[i].led_on [2] = 0x7F;
+		fwd[i].led_off [0] = 0x90;
+		fwd[i].led_off [1] = 0x43;
+		fwd[i].led_off [2] = 0x00;
 	}
 
 	// cycle button

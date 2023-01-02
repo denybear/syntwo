@@ -8,4 +8,8 @@ A version 2 of synthi midi player with the following functionalities:
 * control on general volume and BPM
 * control on each channel's volume
 * ability to set marks in song
-* dynamic tap tempo to adjust midi file rhythm to a playing of a live band
+* dynamic tap tempo to adjust midi file rhythm to a playing of a live band   
+
+
+however, this comes with a price : boocli is not supported anymore in this version. Use synthi if you want to use boocli and synthi at the same time.   
+

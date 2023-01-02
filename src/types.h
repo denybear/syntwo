@@ -57,7 +57,7 @@ typedef struct {				// structure for each control
 	uint8_t value;					// value of the control
 	void (*action) (int);		// function to be called if control is actioned
 	uint8_t led_on [3];			// message to turn led on
-	uint8_t ledd_off [3];			// message to turn led off
+	uint8_t led_off [3];			// message to turn led off
 } button_t;
 
 typedef struct {				// structure for each channel control

@@ -8,46 +8,40 @@
 #include "globals.h"
 #include "config.h"
 #include "process.h"
+#include "utils.h"
+
+// generic process function called everytime a known midi command is received
+void process (int data)
+{
+	printf ("in PROCESS function\n");
+}
 
 
 // fluid callback called every time a MIDI message is received
 int handle_midi_event(void* data, fluid_midi_event_t* event)
 {
 	fluid_midi_router_t* router;
+	int i,j;
 
 
 	// define data as being a pointer to fluid_midi_router_t router
 	router = (fluid_midi_router_t*) data;
 
-    printf("event type (without channel): %x %x %x\n", fluid_midi_event_get_type(event), fluid_midi_event_get_value(event), fluid_midi_event_get_velocity(event));
+	printf("type: %x\nvalue: %x\nvelocity: %x\n", fluid_midi_event_get_type(event), fluid_midi_event_get_value(event), fluid_midi_event_get_velocity(event));
+	printf("channel: %x\ncontrol: %x\nkey: %x\nprogram: %x\n\n\n", fluid_midi_event_get_channel(event), fluid_midi_event_get_control(event), fluid_midi_event_get_key(event), fluid_midi_event_get_program(event));
+
+	// check whether received event correponds to a channel event
+	for (i = 0; i<NB_CHANNEL; i++) {
+		for (j = 0; j<NB_RECSHIFT; j++) {
+			// CC7 volume control
+		}
+	}
 
 	return FLUID_OK;
 }
 
 
-// main process callback called at capture of (nframes) frames/samples
-int process ( jack_nframes_t nframes, void *arg )
-{
-	jack_nframes_t h;
-	int i,j,k;
-	int mute = OFF;
-	void *midiin;
-	void *midiout;
-	void *clockout;
-	jack_midi_event_t in_event;
-	jack_midi_data_t buffer[5];				// midi out buffer for lighting the pad leds and for midi clock
-	int dest, row, col, on_off;				// variables used to manage lighting of the pad leds
-
-
-	/*****************************************************************************/
-	/* At very first, process external beat switch by checking if pressed or not */
-	/*****************************************************************************/
-	if (gpio_process () == TRUE) beat_process ();
-
-
-	return 0;
-}
-
+/*
 
 // process callback called to process midi_in events in realtime
 int midi_in_process (jack_midi_event_t *event, jack_nframes_t nframes) {
@@ -89,7 +83,6 @@ int midi_in_process (jack_midi_event_t *event, jack_nframes_t nframes) {
 	}
 
 
-	
 	// PROCESS FILE FUNCTIONS : VOL -/+, BPM -/+
 	// check if volume down pad has been pressed
 	if (same_event(event->buffer,filefunct[0].ctrl[VOLDOWN])) {
@@ -217,6 +210,7 @@ int midi_in_process (jack_midi_event_t *event, jack_nframes_t nframes) {
 		beat_process ();
 	}
 }
+*/
 
 
 // process managing external switch and LED
@@ -290,22 +284,3 @@ int beat_process () {
 	}
 }
 
-
-// process callback called to process midi player ticks in realtime
-// we use this function to convert midi file ticks (PPQ ticks per quarrter note)
-// into MIDI_CLOCK ticks (24 ticks per quarter note) to drive external midi systems
-int handle_tick(void *data, int tick) {
-
-	fluid_player_t* player;
-	int index_pulse;
-	int i;
-	float ppq_per_midi_clock;
-	int end_tick;
-
-
-	// define data as being a pointer to player
-	player = (fluid_player_t*) data;
-		
-
-	return FLUID_OK;
-}
