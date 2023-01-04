@@ -20,15 +20,24 @@ void process (int data)
 // fluid callback called every time a MIDI message is received
 int handle_midi_event(void* data, fluid_midi_event_t* event)
 {
-	fluid_midi_router_t* router;
+	fluid_synth_t* s;
 	int i,j;
+	
+		// define data as being a pointer to fluid_synth_t structure
+	s = (fluid_synth_t*) data;
 
 
-	// define data as being a pointer to fluid_midi_router_t router
-	router = (fluid_midi_router_t*) data;
+// DEBUG ONLY	
+if (fluid_midi_event_get_type(event)!=0xF8){
+	if ((fluid_midi_event_get_type(event)==0x80) || (fluid_midi_event_get_type(event)== 0x90))
+		printf("type: %02X key: %02X velocity: %02X\n", (fluid_midi_event_get_type(event)+fluid_midi_event_get_channel(event)), fluid_midi_event_get_key(event), fluid_midi_event_get_velocity(event));
+	else
+		printf("type: %02X control: %02X value: %02X\n", (fluid_midi_event_get_type(event)+fluid_midi_event_get_channel(event)), fluid_midi_event_get_control(event), fluid_midi_event_get_value(event));
+// we won't manage program change, pitch bend, channel pressure, key pressure, midi system reset
+//printf ("data: %02X %02X\n\n", event->param1, event->param2);
+}
 
-	printf("type: %x\nvalue: %x\nvelocity: %x\n", fluid_midi_event_get_type(event), fluid_midi_event_get_value(event), fluid_midi_event_get_velocity(event));
-	printf("channel: %x\ncontrol: %x\nkey: %x\nprogram: %x\n\n\n", fluid_midi_event_get_channel(event), fluid_midi_event_get_control(event), fluid_midi_event_get_key(event), fluid_midi_event_get_program(event));
+
 
 	// check whether received event correponds to a channel event
 	for (i = 0; i<NB_CHANNEL; i++) {
@@ -36,6 +45,8 @@ int handle_midi_event(void* data, fluid_midi_event_t* event)
 			// CC7 volume control
 		}
 	}
+
+	fluid_synth_handle_midi_event((fluid_synth_t*) data, event);
 
 	return FLUID_OK;
 }

@@ -15,7 +15,7 @@ LIBS = -lm -L/usr/local/lib64 -lfluidsynth -lpigpio
 
 #Set any compiler flags you want to use (e.g. -I/usr/include/somefolder `pkg-config --cflags gtk+-3.0` ), or leave blank
 #REMOVE -g TO REMOVE DEBUGGER
-CFLAGS =
+CFLAGS = -g
 
 #Set the compiler you are using ( gcc for C or g++ for C++ )
 CC = gcc

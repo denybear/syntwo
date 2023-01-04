@@ -90,11 +90,24 @@ static void signal_handler ( int sig )
 {
 	kill_gpio ();
 
-	delete_fluid_audio_driver(adriver);
+    // wait for playback termination
+    fluid_player_join(player);
+
+
+	// for fluidsynth to stop properly, one must do these steps backwards
+	// 1. create settings
+ 	// 2. set midi driver settings
+ 	// 3. set audio driver settings
+ 	// 4. create synth
+ 	// 5. load soundfont
+ 	// 6. create audio driver
+ 	// 7. create midi driver
+
 	delete_fluid_player(player);
+	delete_fluid_midi_driver(mdriver);
+	delete_fluid_audio_driver(adriver);
 	delete_fluid_synth(synth);
 	delete_fluid_settings(settings);
-    delete_fluid_midi_driver(mdriver);
 
 	fprintf ( stderr, "signal received, exiting ...\n" );
 	exit ( 0 );
@@ -129,31 +142,46 @@ int main ( int argc, char *argv[] )
 	init_globals ();
 	read_config ();
 
+	// For fluidsynth, things mut be done in the following order
+	// 1. create settings
+ 	// 2. set midi driver settings
+ 	// 3. set audio driver settings
+ 	// 4. create synth
+ 	// 5. load soundfont
+ 	// 6. create audio driver
+ 	// 7. create midi driver
+
 	// init fluidsynth
+	// create settings
 	settings = new_fluid_settings();
 
-	// settings for fluidsynth
+	// settings for fluidsynth midi and audio
+
+	fluid_settings_setstr(settings, "midi.driver", "alsa_raw");
+// METTRE LE NUMERO DE DEVICE EN ARGV???
+	fluid_settings_setstr(settings, "midi.alsa.device", "hw:2,0,0");
+
 	fluid_settings_setstr(settings, "audio.driver", "alsa");
-	fluid_settings_setstr(settings, "midi.driver", "alsa-raw");
 	// fluid_settings_setstr(settings, "synth.sample-rate", "48000.0");
 
-	// new fluidsynth
+	// create synth
 	synth = new_fluid_synth(settings);
-
-	// start midi driver
-    mdriver = new_fluid_midi_driver(settings, handle_midi_event, NULL);		// callback called every time a midi event is received by Fluidsynth
-
-	// start the synthesizer thread
-	adriver = new_fluid_audio_driver(settings, synth);
 
 	// load default soundfont
 	if (fluid_is_soundfont(DEFAULT_SF2)) {
 		fluid_synth_sfload(synth, DEFAULT_SF2, 1);
 	}
 
+	// start audio drver
+	adriver = new_fluid_audio_driver(settings, synth);
+
+	// start midi driver
+    mdriver = new_fluid_midi_driver(settings, handle_midi_event, (void *) synth);		// callback called every time a midi event is received by Fluidsynth
+
 	// create new player, but don't load anything for now
 	player = new_fluid_player(synth);
-
+// callback for handling midi events from midi file
+//fluid_player_set_playback_callback	(player, handle_midi_event, (void *) synth);
 
 
 	/*************/
@@ -183,8 +211,11 @@ int main ( int argc, char *argv[] )
 						delete_fluid_player (player);
 						// create new player
 						player = new_fluid_player(synth);
+// callback for handling midi events from midi file
+//fluid_player_set_playback_callback	(player, handle_midi_event, (void *) synth);
 						// load midi file
 						fluid_player_add(player, name);
+
 						// set endless looping of current file
 						fluid_player_set_loop (player, -1);
 
