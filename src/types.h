@@ -43,19 +43,19 @@
 typedef struct {				// structure for each control
 	uint8_t message [3];			// midi message of the control (sent from device to PI)
 	uint8_t value;					// value of the control
-	void (*action) (int);		// function to be called if control is actioned
+	int (*action) (uint8_t*);		// function to be called if control is actioned
 } slider_t;
 
 typedef struct {				// structure for each control
 	uint8_t message [3];			// midi message of the control (sent from device to PI)
 	uint8_t value;					// value of the control
-	void (*action) (int);		// function to be called if control is actioned
+	int (*action) (uint8_t*);		// function to be called if control is actioned
 } knob_t;
 
 typedef struct {				// structure for each control
 	uint8_t message [3];			// midi message of the control (sent from device to PI)
 	uint8_t value;					// value of the control
-	void (*action) (int);		// function to be called if control is actioned
+	int (*action) (uint8_t*);		// function to be called if control is actioned
 	uint8_t led_on [3];			// message to turn led on
 	uint8_t led_off [3];			// message to turn led off
 } button_t;

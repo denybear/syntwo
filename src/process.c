@@ -11,9 +11,9 @@
 #include "utils.h"
 
 // generic process function called everytime a known midi command is received
-void process (int data)
+int process (uint8_t *data)
 {
-	printf ("in PROCESS function\n");
+	printf ("in PROCESS function: %02X %02X %02X\n", data[0], data [1], data [2]);
 }
 
 
@@ -21,32 +21,71 @@ void process (int data)
 int handle_midi_event(void* data, fluid_midi_event_t* event)
 {
 	fluid_synth_t* s;
-	int i,j;
+	int i;
+	channel_t *chan;			// intermediate struct to simplify code lisibility
+	uint8_t mididata[3];		// one single structure regardless of midi event type
 	
 		// define data as being a pointer to fluid_synth_t structure
 	s = (fluid_synth_t*) data;
 
-
-// DEBUG ONLY	
-if (fluid_midi_event_get_type(event)!=0xF8){
-	if ((fluid_midi_event_get_type(event)==0x80) || (fluid_midi_event_get_type(event)== 0x90))
-		printf("type: %02X key: %02X velocity: %02X\n", (fluid_midi_event_get_type(event)+fluid_midi_event_get_channel(event)), fluid_midi_event_get_key(event), fluid_midi_event_get_velocity(event));
-	else
-		printf("type: %02X control: %02X value: %02X\n", (fluid_midi_event_get_type(event)+fluid_midi_event_get_channel(event)), fluid_midi_event_get_control(event), fluid_midi_event_get_value(event));
-// we won't manage program change, pitch bend, channel pressure, key pressure, midi system reset
-//printf ("data: %02X %02X\n\n", event->param1, event->param2);
-}
-
-
-
-	// check whether received event correponds to a channel event
-	for (i = 0; i<NB_CHANNEL; i++) {
-		for (j = 0; j<NB_RECSHIFT; j++) {
-			// CC7 volume control
-		}
+	// fill mididata as per midi event type
+	mididata[0] = fluid_midi_event_get_type(event);
+	if ((mididata[0]==0x80) || (mididata[0]==0x90)) {
+		// NOTE ON NOTE OFF
+		mididata[1] = fluid_midi_event_get_key(event);
+		mididata[2] = fluid_midi_event_get_velocity(event);
+	}
+	else {
+		// other events like CC events
+		// we won't manage program change, pitch bend, channel pressure, key pressure, midi system reset
+		mididata[1] = fluid_midi_event_get_control(event);
+		mididata[2] = fluid_midi_event_get_value(event);
 	}
 
-	fluid_synth_handle_midi_event((fluid_synth_t*) data, event);
+	// PLAY
+	if (memcmp (play.message, mididata, 3)) return play.action (mididata);
+	// STOP
+	if (memcmp (stop.message, mididata, 3)) return stop.action (mididata);
+	// RECORD
+	if (memcmp (record.message, mididata, 3)) return record.action (mididata);
+
+	// SET
+	if (memcmp (set.message, mididata, 3)) return set.action (mididata);
+	// MARKER_L
+	if (memcmp (marker_l.message, mididata, 3)) return marker_l.action (mididata);
+	// MARKER_R
+	if (memcmp (marker_r.message, mididata, 3)) return marker_r.action (mididata);
+
+	// CYCLE
+	if (memcmp (cycle.message, mididata, 3)) return cycle.action (mididata);
+
+	// TRACK_L
+	if (memcmp (track_l[cycle.value].message, mididata, 3)) return track_l[cycle.value].action (mididata);
+	// TRACK_R
+	if (memcmp (track_r[cycle.value].message, mididata, 3)) return track_r[cycle.value].action (mididata);
+	// RWD
+	if (memcmp (rwd[cycle.value].message, mididata, 3)) return rwd[cycle.value].action (mididata);
+	// FWD
+	if (memcmp (fwd[cycle.value].message, mididata, 3)) return fwd[cycle.value].action (mididata);
+
+	// CHANNELS
+	// check whether received event correponds to a channel event
+	for (i = 0; i<NB_CHANNEL; i++) {
+		chan = & (channel[i][channel[i][0].rec.value]);
+		// SLIDER
+		if (memcmp (chan->slider.message, mididata, 3)) return chan->slider.action (mididata);
+		// KNOB
+		if (memcmp (chan->knob.message, mididata, 3)) return chan->knob.action (mididata);
+		// SOLO
+		if (memcmp (chan->solo.message, mididata, 3)) return chan->solo.action (mididata);
+		// MUTE
+		if (memcmp (chan->mute.message, mididata, 3)) return chan->mute.action (mididata);
+		// REC: take only value 0 into account
+		chan = & (channel[i][0]);
+		if (memcmp (chan->rec.message, mididata, 3)) return chan->rec.action (mididata);
+	}
+
+//	fluid_synth_handle_midi_event((fluid_synth_t*) data, event);
 
 	return FLUID_OK;
 }
