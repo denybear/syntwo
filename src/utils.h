@@ -5,4 +5,6 @@
  */
 
 int get_full_filename (char *, unsigned char, char *);
-uint64_t micros();
+int load_midi_sf2 ();
+uint64_t micros ();
+void led (button_t *, int);

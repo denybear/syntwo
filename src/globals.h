@@ -21,19 +21,15 @@ extern uint64_t previous_led;  // time when switch was set as on
 /* load (midi and SF2 files) & play (midi file) globals */
 extern int midi_load, sf2_load;
 // file number for midi and sf2 files
-extern uint8_t midi_num, sf2_num;
+extern uint8_t new_midi_num, new_sf2_num;				// new file number to be loaded
+extern uint8_t current_midi_num, current_sf2_num;		// current file number that is currently loaded
 
-extern int is_play;
 extern int sf2_id;		// id of sf2 file currently loaded
 
 /* volume and BPM */
 extern int bpm;
 extern int initial_bpm;
 extern int volume;
-extern int is_volume;
-
-/* PPQ */
-extern int ppq;
 
 /* beat */
 extern uint64_t now;       // time now

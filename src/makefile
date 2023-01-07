@@ -3,10 +3,10 @@
 #Change output_file_name.a below to your desired executible filename
 
 #Set all your object files (the object files of all the .c files in your project, e.g. main.o my_sub_functions.o )
-OBJ = main.o config.o process.o utils.o
+OBJ = main.o config.o process.o utils.o gpio.o
 
 #Set any dependant header files so that if they are edited they cause a complete re-compile (e.g. main.h some_subfunctions.h some_definitions_file.h ), or leave blank
-DEPS = fluidsynth.h types.h main.h config.h process.h utils.h
+DEPS = fluidsynth.h types.h main.h config.h process.h utils.h gpio.h
 
 #Any special libraries you are using in your project (e.g. -lbcm2835 -lrt `pkg-config --libs gtk+-3.0` ), or leave blank
 #LIBS = -L/usr/lib/i386-linux-gnu -ljack

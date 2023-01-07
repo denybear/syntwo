@@ -9,6 +9,7 @@
 #include "config.h"
 #include "process.h"
 #include "utils.h"
+#include "gpio.h"
 
 
 /* This example reads the configuration file 'example.cfg' and displays
@@ -21,17 +22,19 @@ void read_config (void)
 	
 	// note: "CHANNEL" nibble in byte 1 of MIDI message is NOT taken into account
 	// set channels 
+	// for KORG NANOKONTROL 2: settings should be CC, toggle mode ON for CYCLE, SOLO, MUTE, REC
+
 	for (i = 0; i<NB_CHANNEL; i++) {
 		for (j = 0; j<NB_RECSHIFT; j++) {
 			// CC7 volume control
 			channel[i][j].slider.message [0] = 0xB0;
 			channel[i][j].slider.message [1] = i;
-			channel[i][j].slider.action = &process;
+			channel[i][j].slider.action = &process_slider;
 
 			// CC10 balance control
 			channel[i][j].knob.message [0] = 0xB0;
 			channel[i][j].knob.message [1] = 0x10 + i;
-			channel[i][j].knob.action = &process;
+			channel[i][j].knob.action = &process_knob;
 
 			// solo button
 			channel[i][j].solo.message [0] = 0xB0;
@@ -68,12 +71,13 @@ void read_config (void)
 		}
 	}
 
-	// set tracks and rwd/ffd
+	// set tracks and rwd/fwd
 	for (i = 0; i<NB_CYCSHIFT; i++) {
 		// track_l button
 		track_l[i].message [0] = 0xB0;
 		track_l[i].message [1] = 0x3A;
-		track_l[i].action = &process;
+		if (i==0) track_l[i].action = &process_track_l;
+		else track_l[i].action = &process_track_l_shift;
 		track_l[i].led_on [0] = 0xB0;
 		track_l[i].led_on [1] = 0x3A;
 		track_l[i].led_on [2] = 0x7F;
@@ -84,7 +88,8 @@ void read_config (void)
 		// track_r button
 		track_r[i].message [0] = 0xB0;
 		track_r[i].message [1] = 0x3B;
-		track_r[i].action = &process;
+		if (i==0) track_r[i].action = &process_track_r;
+		else track_r[i].action = &process_track_r_shift;
 		track_r[i].led_on [0] = 0xB0;
 		track_r[i].led_on [1] = 0x3B;
 		track_r[i].led_on [2] = 0x7F;
@@ -95,7 +100,8 @@ void read_config (void)
 		// rewind button
 		rwd[i].message [0] = 0xB0;
 		rwd[i].message [1] = 0x2B;
-		rwd[i].action = &process;
+		if (i==0) rwd[i].action = &process_rwd;
+		else rwd[i].action = &process_rwd_shift;
 		rwd[i].led_on [0] = 0xB0;
 		rwd[i].led_on [1] = 0x2B;
 		rwd[i].led_on [2] = 0x7F;
@@ -106,7 +112,8 @@ void read_config (void)
 		// forward button
 		fwd[i].message [0] = 0xB0;
 		fwd[i].message [1] = 0x2C;
-		fwd[i].action = &process;
+		if (i==0) fwd[i].action = &process_fwd;
+		else fwd[i].action = &process_fwd_shift;
 		fwd[i].led_on [0] = 0xB0;
 		fwd[i].led_on [1] = 0x2C;
 		fwd[i].led_on [2] = 0x7F;
@@ -118,7 +125,7 @@ void read_config (void)
 	// cycle button
 	cycle.message [0] = 0xB0;
 	cycle.message [1] = 0x2E;
-	cycle.action = &process;
+	cycle.action = &process_cycle;
 	cycle.led_on [0] = 0xB0;
 	cycle.led_on [1] = 0x2E;
 	cycle.led_on [2] = 0x7F;
@@ -129,7 +136,7 @@ void read_config (void)
 	// play button
 	play.message [0] = 0xB0;
 	play.message [1] = 0x29;
-	play.action = &process;
+	play.action = &process_play;
 	play.led_on [0] = 0xB0;
 	play.led_on [1] = 0x29;
 	play.led_on [2] = 0x7F;
@@ -140,7 +147,7 @@ void read_config (void)
 	// stop button
 	stop.message [0] = 0xB0;
 	stop.message [1] = 0x2A;
-	stop.action = &process;
+	stop.action = &process_stop;
 	stop.led_on [0] = 0xB0;
 	stop.led_on [1] = 0x2A;
 	stop.led_on [2] = 0x7F;

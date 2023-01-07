@@ -40,22 +40,22 @@
 #define NB_CYCSHIFT	2	// shift key has 2 positions (non-shift & shift)
 
 /* types */
-typedef struct {				// structure for each control
-	uint8_t message [3];			// midi message of the control (sent from device to PI)
-	uint8_t value;					// value of the control
-	int (*action) (uint8_t*);		// function to be called if control is actioned
+typedef struct {								// structure for each control
+	uint8_t message [3];						// midi message of the control (sent from device to PI)
+	uint8_t value;								// value of the control
+	int (*action) (slider_t*, uint8_t*);		// function to be called if control is actioned
 } slider_t;
 
 typedef struct {				// structure for each control
 	uint8_t message [3];			// midi message of the control (sent from device to PI)
 	uint8_t value;					// value of the control
-	int (*action) (uint8_t*);		// function to be called if control is actioned
+	int (*action) (knob_t*,uint8_t*);		// function to be called if control is actioned
 } knob_t;
 
 typedef struct {				// structure for each control
 	uint8_t message [3];			// midi message of the control (sent from device to PI)
 	uint8_t value;					// value of the control
-	int (*action) (uint8_t*);		// function to be called if control is actioned
+	int (*action) (button_t*,uint8_t*);		// function to be called if control is actioned
 	uint8_t led_on [3];			// message to turn led on
 	uint8_t led_off [3];			// message to turn led off
 } button_t;

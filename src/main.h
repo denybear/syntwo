@@ -21,22 +21,18 @@ fluid_audio_driver_t* adriver;
 int gpio_state;     // OFF = gpio OFF: ON = GPIO ON
 uint64_t previous_led;  // time when switch was set as on
 
-/* load (midi and SF2 files) & play (midi file) globals */
-int midi_load, sf2_load;
 // file number for midi and sf2 files
 uint8_t midi_num, sf2_num;
+/* load (midi and SF2 files) & play (midi file) globals */
+uint8_t new_midi_num, new_sf2_num;				// new file number to be loaded
+uint8_t current_midi_num, current_sf2_num;		// current file number that is currently loaded
 
-int is_play;
 int sf2_id;		// id of sf2 file currently loaded
 
 /* volume and BPM */
 int bpm;
 int initial_bpm;
 int volume;
-int is_volume;
-
-/* PPQ */
-int ppq;
 
 /* beat */
 uint64_t now;       // time now
