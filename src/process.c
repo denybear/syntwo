@@ -28,7 +28,7 @@ int process_slider (slider_t *ctrl, uint8_t *data)
 	ctrl->value = data[2];
 	// send CC7 (sound control) to synthetizer
 	// data[1] is the channel number
-	fluid_synth_cc (data[1], 7, ctrl->value);
+	fluid_synth_cc (synth, data[1], 7, ctrl->value);
 
 	return FLUID_OK;
 }
@@ -42,7 +42,7 @@ int process_slider_shift (slider_t *ctrl, uint8_t *data)
 	ctrl->value = data[2];
 	// send CC7 (sound control) to synthetizer
 	// data[1] is the channel number
-	fluid_synth_cc (data[1]+0x08, 7, ctrl->value);
+	fluid_synth_cc (synth, data[1]+0x08, 7, ctrl->value);
 
 	return FLUID_OK;
 }
@@ -56,7 +56,7 @@ int process_knob (knob_t *ctrl, uint8_t *data)
 	ctrl->value = data[2];
 	// send CC8 (balance) to synthetizer
 	// data[1] is the channel number
-	fluid_synth_cc (data[1]-0x10, 8, ctrl->value);
+	fluid_synth_cc (synth, data[1]-0x10, 8, ctrl->value);
 
 	return FLUID_OK;
 }
@@ -70,11 +70,130 @@ int process_knob_shift (knob_t *ctrl, uint8_t *data)
 	ctrl->value = data[2];
 	// send CC8 (balance) to synthetizer
 	// data[1] is the channel number
-	fluid_synth_cc (data[1]-0x10+0x08, 8, ctrl->value);
+	fluid_synth_cc (synth, data[1]-0x10+0x08, 8, ctrl->value);
 
 	return FLUID_OK;
 }
 
+// process function called everytime solo button is pressed
+// TOGGLE MODE ON
+int process_solo (button_t *ctrl, uint8_t *data)
+{
+	//TO DO
+	printf ("SOLO: %02X %02X %02X\n", data[0], data [1], data [2]);
+
+	// get value from the midi control: 0 or 1 (OFF or ON)
+	ctrl->value = data[2] & 0x01;		// &0x01 as value in midi message is 7F in case of ON
+	// switch led on/off accordingly
+	led (ctrl, ctrl->value);
+
+	return FLUID_OK;
+}
+
+// process function called everytime solo button is pressed for channels > 8
+// TOGGLE MODE ON
+int process_solo_shift (button_t *ctrl, uint8_t *data)
+{
+	// TO DO
+	printf ("SOLO_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
+
+	// get value from the midi control: 0 or 1 (OFF or ON)
+	ctrl->value = data[2] & 0x01;		// &0x01 as value in midi message is 7F in case of ON
+	// switch led on/off accordingly
+	led (ctrl, ctrl->value);
+
+	return FLUID_OK;
+}
+
+// process function called everytime mute button is pressed
+// TOGGLE MODE ON
+int process_mute (button_t *ctrl, uint8_t *data)
+{
+	int i, cc;
+	
+	printf ("MUTE: %02X %02X %02X\n", data[0], data [1], data [2]);
+	// get channel number
+	i = data [1] - 0x30;
+	
+	// get value from the midi control: 0 or 1 (OFF or ON)
+	ctrl->value = data[2] & 0x01;		// &0x01 as value in midi message is 7F in case of ON
+	// useless as we cannot control leds
+	// switch led on/off accordingly
+	led (ctrl, ctrl->value);
+
+	if (ctrl->value) {
+		// mute ON
+		// get current value of CC7 of channel; if no value set, then fix arbitrary value to 64
+		if (fluid_synth_get_cc (synth, i, 7, &cc) != FLUID_OK) cc = 0x40;
+		// save current CC value to the corresponding slider
+		channel[i][0].slider.value = cc;
+		// send CC7 (sound control) to synthetizer as 0 to mute the channel
+		// i is the channel number
+		fluid_synth_cc (synth, i, 7, 0);
+	}
+	else {
+		// mute OFF
+		// get current CC value from the corresponding slider
+		cc = channel[i][0].slider.value;
+		// send CC7 (sound control) to synthetizer as cc value to unmute the channel
+		// i is the channel number
+		fluid_synth_cc (synth, i, 7, cc);
+	}
+
+	return FLUID_OK;
+}
+
+// process function called everytime mute button is pressed for channels > 8
+// TOGGLE MODE ON
+int process_mute_shift (button_t *ctrl, uint8_t *data)
+{
+	int i, cc;
+	
+	printf ("MUTE_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
+	// get channel number
+	i = data [1] - 0x30 + 0x08;
+	
+	// get value from the midi control: 0 or 1 (OFF or ON)
+	ctrl->value = data[2] & 0x01;		// &0x01 as value in midi message is 7F in case of ON
+	// useless as we cannot control leds
+	// switch led on/off accordingly
+	led (ctrl, ctrl->value);
+
+	if (ctrl->value) {
+		// mute ON
+		// get current value of CC7 of channel; if no value set, then fix arbitrary value to 64
+		if (fluid_synth_get_cc (synth, i, 7, &cc) != FLUID_OK) cc = 0x40;
+		// save current CC value to the corresponding slider
+		channel[i-0x08][1].slider.value = cc;
+		// send CC7 (sound control) to synthetizer as 0 to mute the channel
+		// i is the channel number
+		fluid_synth_cc (synth, i, 7, 0);
+	}
+	else {
+		// mute OFF
+		// get current CC value from the corresponding slider
+		cc = channel[i-0x08][1].slider.value;
+		// send CC7 (sound control) to synthetizer as cc value to unmute the channel
+		// i is the channel number
+		fluid_synth_cc (synth, i, 7, cc);
+	}
+
+	return FLUID_OK;
+}
+
+// process function called everytime rec button is pressed
+// TOGGLE MODE ON
+int process_rec (button_t *ctrl, uint8_t *data)
+{
+	printf ("REC: %02X %02X %02X\n", data[0], data [1], data [2]);
+
+	// get value from the midi control: 0 or 1 (OFF or ON)
+	ctrl->value = data[2] & 0x01;		// &0x01 as value in midi message is 7F in case of ON
+	// switch led on/off accordingly
+	led (ctrl, ctrl->value);
+
+	return FLUID_OK;
+}
 
 // process function called everytime cycle button is pressed
 // TOGGLE MODE ON
@@ -425,7 +544,7 @@ int handle_midi_event(void* data, fluid_midi_event_t* event)
 	// CHANNELS
 	// check whether received event correponds to a channel event
 	for (i = 0; i<NB_CHANNEL; i++) {
-		chan = & (channel[i][channel[i][0].rec.value]);
+		chan = & (channel[i][channel[i][0].rec.value & 0x01]);
 		// SLIDER
 		if (memcmp (chan->slider.message, mididata, 2)) return chan->slider.action (&(chan->slider), mididata);
 		// KNOB

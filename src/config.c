@@ -29,17 +29,17 @@ void read_config (void)
 			// CC7 volume control
 			channel[i][j].slider.message [0] = 0xB0;
 			channel[i][j].slider.message [1] = i;
-			channel[i][j].slider.action = &process_slider;
+			(j==0) ? channel[i][j].slider.action = &process_slider : channel[i][j].slider.action = &process_slider_shift;
 
 			// CC10 balance control
 			channel[i][j].knob.message [0] = 0xB0;
 			channel[i][j].knob.message [1] = 0x10 + i;
-			channel[i][j].knob.action = &process_knob;
+			(j==0) ? channel[i][j].knob.action = &process_knob : channel[i][j].knob.action = &process_knob_shift;
 
 			// solo button
 			channel[i][j].solo.message [0] = 0xB0;
 			channel[i][j].solo.message [1] = 0x20 + i;
-			channel[i][j].solo.action = &process;
+			(j==0) ? channel[i][j].solo.action = &process_solo : channel[i][j].solo.action = &process_solo_shift;
 			channel[i][j].solo.led_on [0] = 0xB0;
 			channel[i][j].solo.led_on [1] = 0x20 + i;
 			channel[i][j].solo.led_on [2] = 0x7F;
@@ -50,7 +50,7 @@ void read_config (void)
 			// mute button
 			channel[i][j].mute.message [0] = 0xB0;
 			channel[i][j].mute.message [1] = 0x30 + i;
-			channel[i][j].mute.action = &process;
+			(j==0) ? channel[i][j].mute.action = &process_mute : channel[i][j].mute.action = &process_mute_shift;
 			channel[i][j].mute.led_on [0] = 0xB0;
 			channel[i][j].mute.led_on [1] = 0x30 + i;
 			channel[i][j].mute.led_on [2] = 0x7F;
@@ -61,7 +61,7 @@ void read_config (void)
 			// rec button
 			channel[i][j].rec.message [0] = 0xB0;
 			channel[i][j].rec.message [1] = 0x40 + i;
-			channel[i][j].rec.action = &process;
+			channel[i][j].rec.action = &process_rec;
 			channel[i][j].rec.led_on [0] = 0xB0;
 			channel[i][j].rec.led_on [1] = 0x40 + i;
 			channel[i][j].rec.led_on [2] = 0x7F;
@@ -76,8 +76,7 @@ void read_config (void)
 		// track_l button
 		track_l[i].message [0] = 0xB0;
 		track_l[i].message [1] = 0x3A;
-		if (i==0) track_l[i].action = &process_track_l;
-		else track_l[i].action = &process_track_l_shift;
+		(i==0) ? track_l[i].action = &process_track_l : track_l[i].action = &process_track_l_shift;
 		track_l[i].led_on [0] = 0xB0;
 		track_l[i].led_on [1] = 0x3A;
 		track_l[i].led_on [2] = 0x7F;
@@ -88,8 +87,7 @@ void read_config (void)
 		// track_r button
 		track_r[i].message [0] = 0xB0;
 		track_r[i].message [1] = 0x3B;
-		if (i==0) track_r[i].action = &process_track_r;
-		else track_r[i].action = &process_track_r_shift;
+		(i==0) ? track_r[i].action = &process_track_r : track_r[i].action = &process_track_r_shift;
 		track_r[i].led_on [0] = 0xB0;
 		track_r[i].led_on [1] = 0x3B;
 		track_r[i].led_on [2] = 0x7F;
@@ -100,8 +98,7 @@ void read_config (void)
 		// rewind button
 		rwd[i].message [0] = 0xB0;
 		rwd[i].message [1] = 0x2B;
-		if (i==0) rwd[i].action = &process_rwd;
-		else rwd[i].action = &process_rwd_shift;
+		(i==0) ? rwd[i].action = &process_rwd : rwd[i].action = &process_rwd_shift;
 		rwd[i].led_on [0] = 0xB0;
 		rwd[i].led_on [1] = 0x2B;
 		rwd[i].led_on [2] = 0x7F;
@@ -112,8 +109,7 @@ void read_config (void)
 		// forward button
 		fwd[i].message [0] = 0xB0;
 		fwd[i].message [1] = 0x2C;
-		if (i==0) fwd[i].action = &process_fwd;
-		else fwd[i].action = &process_fwd_shift;
+		(i==0) ? fwd[i].action = &process_fwd : fwd[i].action = &process_fwd_shift;
 		fwd[i].led_on [0] = 0xB0;
 		fwd[i].led_on [1] = 0x2C;
 		fwd[i].led_on [2] = 0x7F;
