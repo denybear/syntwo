@@ -24,12 +24,7 @@ static void init_globals ( )
 	/* INIT SOME GLOBAL VARIABLES */
 	/******************************/
 
-	/* clear structure that will get control data */
-/*	for (i = 0; i<NB_CHANNEL; i++) {
-		for (j = 0; j<NB_RECSHIFT; j++) {
-			memset (&channel[i][j], 0, sizeof (channel_t));
-		}
-	}*/
+	// clear structure that will get control data
 	memset (channel, 0, NB_CHANNEL * NB_RECSHIFT * sizeof (channel_t));
 	memset (track_l, 0, NB_CYCSHIFT * sizeof (button_t));
 	memset (track_r, 0, NB_CYCSHIFT * sizeof (button_t));
@@ -45,8 +40,6 @@ static void init_globals ( )
 
 	// clear load/play flags
 	// is_load = TRUE allows to load default files (00_*) at startup
-	midi_load = TRUE;
-	sf2_load = TRUE;
 	new_midi_num = 0;		// file 00 as default for both midi and sf2
 	new_sf2_num = 0;
 	current_midi_num = 1;		// set current file at 01 to force loading of files number 0 at startup
@@ -55,7 +48,6 @@ static void init_globals ( )
 
 	// function flags
 	volume = 2;
-	is_volume = TRUE;	// force setting the volume at startup
 	// we are at initial volume, set leds accordingly
 	// this is useless as we cannot control the leds for now
 	led (&rwd[1], ON);
@@ -103,8 +95,6 @@ static void signal_handler ( int sig )
 int main ( int argc, char *argv[] )
 {
 	int i,j;
-	// string containing : directory + filename
-	char name [1000];
 
 	/* install a signal handler to properly quit */
 #ifdef WIN32
@@ -146,24 +136,21 @@ int main ( int argc, char *argv[] )
 	fluid_settings_setstr(settings, "midi.alsa.device", "hw:2,0,0");
 
 	fluid_settings_setstr(settings, "audio.driver", "alsa");
+// METTRE LE NUMERO DE DEVICE EN ARGV???
+	fluid_settings_setstr(settings, "audio.alsa.device", "hw:3,0,0");
+	fluid_settings_setstr(settings, "audio.periods", "16");
+	fluid_settings_setstr(settings, "audio.period-size", "128");
+
 	// fluid_settings_setstr(settings, "synth.sample-rate", "48000.0");
 
 	// create synth
 	synth = new_fluid_synth(settings);
 
 	// load default soundfont
+	// default soundfont will always be in memory and will never be unloaded
+	// to avoid sound issues
 	if (fluid_is_soundfont(DEFAULT_SF2)) {
-		
-
-
-/********************/
-/* BUG DS SYNTI???  */
-/********************/	
-// correction ci dessous: set sf2_id
-
-		
-		
-		sf2_id = fluid_synth_sfload(synth, DEFAULT_SF2, 1);
+		fluid_synth_sfload(synth, DEFAULT_SF2, TRUE);
 	}
 
 	// start audio driver

@@ -4,8 +4,8 @@
  *
  */
 
-static int init_gpio ();
-static int kill_gpio ();
+int init_gpio ();
+int kill_gpio ();
 int gpio_process ();
 int beat_process ();
 

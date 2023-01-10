@@ -50,11 +50,15 @@ int get_full_filename (char * name, unsigned char number, char * directory) {
 
 // Check if file number (ie. filename) of midi & sf2 files has changed compared to what is currently used/played. So yes, then load new files (either midi, either SF2, either both)
 int load_midi_sf2 () {
+
+	// string containing : directory + filename
+	char name [300];
+
 	// make sure no file is playing to allow load of new files !
 	if ((fluid_player_get_status (player)== FLUID_PLAYER_DONE) || (fluid_player_get_status (player)== FLUID_PLAYER_READY)) {
 
 		// check if user has requested load midi of midi file and that new file to download is not the same as current
-		if (midi_load && (new_midi_num != current_midi_num)) {
+		if (new_midi_num != current_midi_num) {
 		
 			// get name of requested midi file from directory
 			if (get_full_filename (name, new_midi_num, "./songs/") == TRUE) {
@@ -74,7 +78,6 @@ int load_midi_sf2 () {
 					fluid_player_set_loop (player, -1);
 
 					// loading has been done
-					midi_load = FALSE;
 					current_midi_num = new_midi_num;
 
 					// initial bpm of the file is set to -1 to force reading of initial bpm if bpm pads are pressed
@@ -90,19 +93,20 @@ int load_midi_sf2 () {
 			}
 		}
 
-		if (sf2_load && (new_sf2_num != current_sf2_num)) {
+		if (new_sf2_num != current_sf2_num) {
 			// get name of requested SF2 file from directory
-			if (get_full_filename (name, sf2_num, "./soundfonts/") == TRUE) {
+			if (get_full_filename (name, new_sf2_num, "./soundfonts/") == TRUE) {
 				// if a file exists
 				if (fluid_is_soundfont(name)) {
 					// unload previously loaded soundfont
 					// this is to prevent memory issues (lack of memory)
-					fluid_synth_sfunload (synth, sf2_id, TRUE);
+					// however make sure we don't unload the only soundfont in memory
+					// in theory we should have at least 1 soundfont all the time in memory (default SF2)
+					if (fluid_synth_sfcount (synth) > 1) fluid_synth_sfunload (synth, sf2_id, TRUE);
 					// load new sf2 file
 					sf2_id = fluid_synth_sfload(synth, name, TRUE);
 
 					// loading has been done
-					sf2_load = FALSE;
 					current_sf2_num = new_sf2_num;
 				}
 			}

@@ -12,7 +12,7 @@
 #include "gpio.h"
 
 // generic process function called everytime a known midi command is received
-int process (void *ctrl, uint8_t *data)
+int process (void *control, uint8_t *data)
 {
 	printf ("in PROCESS function: %02X %02X %02X\n", data[0], data [1], data [2]);
 
@@ -20,8 +20,11 @@ int process (void *ctrl, uint8_t *data)
 }
 
 // process function called everytime slide is actionned
-int process_slider (slider_t *ctrl, uint8_t *data)
+int process_slider (void *control, uint8_t *data)
 {
+	slider_t *ctrl;
+	ctrl = control;
+
 	printf ("SLIDER: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get value from the midi control
@@ -34,8 +37,11 @@ int process_slider (slider_t *ctrl, uint8_t *data)
 }
 
 // process function called everytime slide is actionned for channels > 8
-int process_slider_shift (slider_t *ctrl, uint8_t *data)
+int process_slider_shift (void *control, uint8_t *data)
 {
+	slider_t *ctrl;
+	ctrl = control;
+
 	printf ("SLIDER_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get value from the midi control
@@ -48,8 +54,11 @@ int process_slider_shift (slider_t *ctrl, uint8_t *data)
 }
 
 // process function called everytime knob is actionned
-int process_knob (knob_t *ctrl, uint8_t *data)
+int process_knob (void *control, uint8_t *data)
 {
+	knob_t *ctrl;
+	ctrl = control;
+
 	printf ("KNOB: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get value from the midi control
@@ -62,8 +71,11 @@ int process_knob (knob_t *ctrl, uint8_t *data)
 }
 
 // process function called everytime knob is actionned for channels > 8
-int process_knob_shift (knob_t *ctrl, uint8_t *data)
+int process_knob_shift (void *control, uint8_t *data)
 {
+	knob_t *ctrl;
+	ctrl = control;
+
 	printf ("KNOB_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get value from the midi control
@@ -77,8 +89,11 @@ int process_knob_shift (knob_t *ctrl, uint8_t *data)
 
 // process function called everytime solo button is pressed
 // TOGGLE MODE ON
-int process_solo (button_t *ctrl, uint8_t *data)
+int process_solo (void *control, uint8_t *data)
 {
+	button_t *ctrl;
+	ctrl = control;
+
 	//TO DO
 	printf ("SOLO: %02X %02X %02X\n", data[0], data [1], data [2]);
 
@@ -92,8 +107,11 @@ int process_solo (button_t *ctrl, uint8_t *data)
 
 // process function called everytime solo button is pressed for channels > 8
 // TOGGLE MODE ON
-int process_solo_shift (button_t *ctrl, uint8_t *data)
+int process_solo_shift (void *control, uint8_t *data)
 {
+	button_t *ctrl;
+	ctrl = control;
+
 	// TO DO
 	printf ("SOLO_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
@@ -107,9 +125,11 @@ int process_solo_shift (button_t *ctrl, uint8_t *data)
 
 // process function called everytime mute button is pressed
 // TOGGLE MODE ON
-int process_mute (button_t *ctrl, uint8_t *data)
+int process_mute (void *control, uint8_t *data)
 {
 	int i, cc;
+	button_t *ctrl;
+	ctrl = control;
 	
 	printf ("MUTE: %02X %02X %02X\n", data[0], data [1], data [2]);
 	// get channel number
@@ -145,9 +165,11 @@ int process_mute (button_t *ctrl, uint8_t *data)
 
 // process function called everytime mute button is pressed for channels > 8
 // TOGGLE MODE ON
-int process_mute_shift (button_t *ctrl, uint8_t *data)
+int process_mute_shift (void *control, uint8_t *data)
 {
 	int i, cc;
+	button_t *ctrl;
+	ctrl = control;
 	
 	printf ("MUTE_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 	// get channel number
@@ -183,8 +205,11 @@ int process_mute_shift (button_t *ctrl, uint8_t *data)
 
 // process function called everytime rec button is pressed
 // TOGGLE MODE ON
-int process_rec (button_t *ctrl, uint8_t *data)
+int process_rec (void *control, uint8_t *data)
 {
+	button_t *ctrl;
+	ctrl = control;
+
 	printf ("REC: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get value from the midi control: 0 or 1 (OFF or ON)
@@ -197,8 +222,11 @@ int process_rec (button_t *ctrl, uint8_t *data)
 
 // process function called everytime cycle button is pressed
 // TOGGLE MODE ON
-int process_cycle (button_t *ctrl, uint8_t *data)
+int process_cycle (void *control, uint8_t *data)
 {
+	button_t *ctrl;
+	ctrl = control;
+
 	printf ("CYCLE: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get value from the midi control: 0 or 1 (OFF or ON)
@@ -211,8 +239,11 @@ int process_cycle (button_t *ctrl, uint8_t *data)
 
 // process function called everytime track_l button is pressed
 // MOMENTARY MODE ON
-int process_track_l (button_t *ctrl, uint8_t *data)
+int process_track_l (void *control, uint8_t *data)
 {
+	button_t *ctrl;
+	ctrl = control;
+
 	printf ("TRACK_L: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
@@ -229,8 +260,11 @@ int process_track_l (button_t *ctrl, uint8_t *data)
 
 // process function called everytime track_r button is pressed
 // MOMENTARY MODE ON
-int process_track_r (button_t *ctrl, uint8_t *data)
+int process_track_r (void *control, uint8_t *data)
 {
+	button_t *ctrl;
+	ctrl = control;
+
 	printf ("TRACK_R: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
@@ -247,8 +281,11 @@ int process_track_r (button_t *ctrl, uint8_t *data)
 
 // process function called everytime track_l button is pressed and shift is ON
 // MOMENTARY MODE ON
-int process_track_l_shift (button_t *ctrl, uint8_t *data)
+int process_track_l_shift (void *control, uint8_t *data)
 {
+	button_t *ctrl;
+	ctrl = control;
+
 	printf ("TRACK_L_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
@@ -265,8 +302,11 @@ int process_track_l_shift (button_t *ctrl, uint8_t *data)
 
 // process function called everytime track_r button is pressed and shift is ON
 // MOMENTARY MODE ON
-int process_track_r_shift (button_t *ctrl, uint8_t *data)
+int process_track_r_shift (void *control, uint8_t *data)
 {
+	button_t *ctrl;
+	ctrl = control;
+
 	printf ("TRACK_R_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
@@ -283,8 +323,11 @@ int process_track_r_shift (button_t *ctrl, uint8_t *data)
 
 // process function called everytime rwd button is pressed
 // MOMENTARY MODE ON
-int process_rwd (button_t *ctrl, uint8_t *data)
+int process_rwd (void *control, uint8_t *data)
 {
+	button_t *ctrl;
+	ctrl = control;
+
 	printf ("RWD: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
@@ -328,8 +371,11 @@ int process_rwd (button_t *ctrl, uint8_t *data)
 
 // process function called everytime fwd button is pressed
 // MOMENTARY MODE ON
-int process_fwd (button_t *ctrl, uint8_t *data)
+int process_fwd (void *control, uint8_t *data)
 {
+	button_t *ctrl;
+	ctrl = control;
+
 	printf ("FWD: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
@@ -373,8 +419,11 @@ int process_fwd (button_t *ctrl, uint8_t *data)
 
 // process function called everytime rwd button is pressed and shift is ON
 // MOMENTARY MODE ON
-int process_rwd_shift (button_t *ctrl, uint8_t *data)
+int process_rwd_shift (void *control, uint8_t *data)
 {
+	button_t *ctrl;
+	ctrl = control;
+
 	printf ("RWD_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
@@ -411,8 +460,11 @@ int process_rwd_shift (button_t *ctrl, uint8_t *data)
 
 // process function called everytime fwd button is pressed and shift is ON
 // MOMENTARY MODE ON
-int process_fwd_shift (button_t *ctrl, uint8_t *data)
+int process_fwd_shift (void *control, uint8_t *data)
 {
+	button_t *ctrl;
+	ctrl = control;
+
 	printf ("FWD_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
@@ -449,14 +501,17 @@ int process_fwd_shift (button_t *ctrl, uint8_t *data)
 
 // process function called everytime play button is pressed
 // MOMENTARY MODE ON
-int process_play (button_t *ctrl, uint8_t *data)
+int process_play (void *control, uint8_t *data)
 {
+	button_t *ctrl;
+	ctrl = control;
+
 	printf ("PLAY: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
 	if (data [2] != 0) {
 		// load new midi file and new sf2, if required
-		// SHOULD WE DO THIS IN THE MAIN THREAD???
+// SHOULD WE DO THIS IN THE MAIN THREAD???
 		load_midi_sf2 ();
 		
 		// rewind to the beggining of the file
@@ -473,8 +528,11 @@ int process_play (button_t *ctrl, uint8_t *data)
 
 // process function called everytime stop button is pressed
 // MOMENTARY MODE ON
-int process_stop (button_t *ctrl, uint8_t *data)
+int process_stop (void *control, uint8_t *data)
 {
+	button_t *ctrl;
+	ctrl = control;
+
 	printf ("STOP: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
@@ -516,46 +574,46 @@ int handle_midi_event(void* data, fluid_midi_event_t* event)
 	}
 
 	// PLAY
-	if (memcmp (play.message, mididata, 2)) return play.action (&play, mididata);
+	if (memcmp (play.message, mididata, 2)==0) return play.action (&play, mididata);
 	// STOP
-	if (memcmp (stop.message, mididata, 2)) return stop.action (&stop, mididata);
+	if (memcmp (stop.message, mididata, 2)==0) return stop.action (&stop, mididata);
 	// RECORD
-	if (memcmp (record.message, mididata, 2)) return record.action (&record, mididata);
+	if (memcmp (record.message, mididata, 2)==0) return record.action (&record, mididata);
 
 	// SET
-	if (memcmp (set.message, mididata, 2)) return set.action (&set, mididata);
+	if (memcmp (set.message, mididata, 2)==0) return set.action (&set, mididata);
 	// MARKER_L
-	if (memcmp (marker_l.message, mididata, 2)) return marker_l.action (&marker_l, mididata);
+	if (memcmp (marker_l.message, mididata, 2)==0) return marker_l.action (&marker_l, mididata);
 	// MARKER_R
-	if (memcmp (marker_r.message, mididata, 2)) return marker_r.action (&marker_r, mididata);
+	if (memcmp (marker_r.message, mididata, 2)==0) return marker_r.action (&marker_r, mididata);
 
 	// CYCLE
-	if (memcmp (cycle.message, mididata, 2)) return cycle.action (&cycle, mididata);
+	if (memcmp (cycle.message, mididata, 2)==0) return cycle.action (&cycle, mididata);
 
 	// TRACK_L
-	if (memcmp (track_l[cycle.value].message, mididata, 2)) return track_l[cycle.value].action (&track_l[cycle.value], mididata);
+	if (memcmp (track_l[cycle.value].message, mididata, 2)==0) return track_l[cycle.value].action (&track_l[cycle.value], mididata);
 	// TRACK_R
-	if (memcmp (track_r[cycle.value].message, mididata, 2)) return track_r[cycle.value].action (&track_r[cycle.value], mididata);
+	if (memcmp (track_r[cycle.value].message, mididata, 2)==0) return track_r[cycle.value].action (&track_r[cycle.value], mididata);
 	// RWD
-	if (memcmp (rwd[cycle.value].message, mididata, 2)) return rwd[cycle.value].action (&rwd[cycle.value], mididata);
+	if (memcmp (rwd[cycle.value].message, mididata, 2)==0) return rwd[cycle.value].action (&rwd[cycle.value], mididata);
 	// FWD
-	if (memcmp (fwd[cycle.value].message, mididata, 2)) return fwd[cycle.value].action (&fwd[cycle.value], mididata);
+	if (memcmp (fwd[cycle.value].message, mididata, 2)==0) return fwd[cycle.value].action (&fwd[cycle.value], mididata);
 
 	// CHANNELS
 	// check whether received event correponds to a channel event
 	for (i = 0; i<NB_CHANNEL; i++) {
 		chan = & (channel[i][channel[i][0].rec.value & 0x01]);
 		// SLIDER
-		if (memcmp (chan->slider.message, mididata, 2)) return chan->slider.action (&(chan->slider), mididata);
+		if (memcmp (chan->slider.message, mididata, 2)==0) return chan->slider.action (&(chan->slider), mididata);
 		// KNOB
-		if (memcmp (chan->knob.message, mididata, 2)) return chan->knob.action (&(chan->knob), mididata);
+		if (memcmp (chan->knob.message, mididata, 2)==0) return chan->knob.action (&(chan->knob), mididata);
 		// SOLO
-		if (memcmp (chan->solo.message, mididata, 2)) return chan->solo.action (&(chan->solo), mididata);
+		if (memcmp (chan->solo.message, mididata, 2)==0) return chan->solo.action (&(chan->solo), mididata);
 		// MUTE
-		if (memcmp (chan->mute.message, mididata, 2)) return chan->mute.action (&(chan->mute), mididata);
+		if (memcmp (chan->mute.message, mididata, 2)==0) return chan->mute.action (&(chan->mute), mididata);
 		// REC: take only value 0 into account
 		chan = & (channel[i][0]);
-		if (memcmp (chan->rec.message, mididata, 2)) return chan->rec.action (&(chan->rec), mididata);
+		if (memcmp (chan->rec.message, mididata, 2)==0) return chan->rec.action (&(chan->rec), mididata);
 	}
 
 //	fluid_synth_handle_midi_event((fluid_synth_t*) data, event);

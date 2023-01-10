@@ -13,7 +13,7 @@
 
 
 // you need to have root priviledges for it to work
-static int init_gpio ()
+int init_gpio ()
 {
 	if (gpioInitialise() == PI_INIT_FAILED) {
     	fprintf(stderr, "pigpio initialisation failed\n");
@@ -32,7 +32,7 @@ static int init_gpio ()
 
 
 // you need to have root priviledges for it to work
-static int kill_gpio ()
+int kill_gpio ()
 {
 	gpioTerminate ();
 }
