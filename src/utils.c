@@ -69,8 +69,7 @@ printf ("midi:%s\n", name);
 					delete_fluid_player (player);
 					// create new player
 					player = new_fluid_player(synth);
-// callback for handling midi events from midi file
-//fluid_player_set_playback_callback	(player, handle_midi_event, (void *) synth);
+
 					// load midi file
 					fluid_player_add(player, name);
 

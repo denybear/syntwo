@@ -14,7 +14,7 @@
 // generic process function called everytime a known midi command is received
 int process (void *control, uint8_t *data)
 {
-	printf ("in PROCESS function: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("in PROCESS function: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	return FLUID_OK;
 }
@@ -25,7 +25,7 @@ int process_slider (void *control, uint8_t *data)
 	slider_t *ctrl;
 	ctrl = control;
 
-	printf ("SLIDER: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("SLIDER: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get value from the midi control
 	ctrl->value = data[2];
@@ -42,7 +42,7 @@ int process_slider_shift (void *control, uint8_t *data)
 	slider_t *ctrl;
 	ctrl = control;
 
-	printf ("SLIDER_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("SLIDER_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get value from the midi control
 	ctrl->value = data[2];
@@ -59,7 +59,7 @@ int process_knob (void *control, uint8_t *data)
 	knob_t *ctrl;
 	ctrl = control;
 
-	printf ("KNOB: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("KNOB: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get value from the midi control
 	ctrl->value = data[2];
@@ -76,7 +76,7 @@ int process_knob_shift (void *control, uint8_t *data)
 	knob_t *ctrl;
 	ctrl = control;
 
-	printf ("KNOB_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("KNOB_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get value from the midi control
 	ctrl->value = data[2];
@@ -91,16 +91,54 @@ int process_knob_shift (void *control, uint8_t *data)
 // TOGGLE MODE ON
 int process_solo (void *control, uint8_t *data)
 {
+	int i, j, k, cc, ch;
 	button_t *ctrl;
 	ctrl = control;
 
-	//TO DO
-	printf ("SOLO: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("SOLO: %02X %02X %02X\n", data[0], data [1], data [2]);
 
+	// get channel number
+	ch = data [1] - 0x30;
+	
 	// get value from the midi control: 0 or 1 (OFF or ON)
 	ctrl->value = data[2] & 0x01;		// &0x01 as value in midi message is 7F in case of ON
+	// useless as we cannot control leds
 	// switch led on/off accordingly
 	led (ctrl, ctrl->value);
+
+	if (ctrl->value) {
+		// solo ON
+		// get current value of all CC7 channel; if no value set, then fix arbitrary value to 64
+		for (i = 0; i<NB_CHANNEL; i++) {
+			for (j=0; j<NB_RECSHIFT; j++) {
+				k = i * (j+1);
+
+				if (fluid_synth_get_cc (synth, k, 7, &cc) != FLUID_OK) cc = 0x40;
+				// save current CC value to the corresponding slider
+				channel[i][j].slider.value_s = cc;
+				// send CC7 (sound control) to synthetizer as 0 to mute the channel
+				// for all channels but ch (current channel number)
+				if (ch != k) fluid_synth_cc (synth, k, 7, 0);
+				channel[i][j].slider.value = 0;		// set actual value for this slider
+			}
+		}
+	}
+	else {
+		// solo OFF
+		// get current CC value from all sliders
+		for (i = 0; i<NB_CHANNEL; i++) {
+			for (j=0; j<NB_RECSHIFT; j++) {
+				k = i * (j+1);
+
+				// get current CC value from corresponding slider
+				cc = channel[i][j].slider.value_s;
+				// send CC7 (sound control) to synthetizer as cc value to unmute the channel
+				// for all channels but ch (current channel number)
+				if (ch != k) fluid_synth_cc (synth, k, 7, cc);
+				channel[i][j].slider.value = cc;		// set actual value for this slider
+			}
+		}
+	}
 
 	return FLUID_OK;
 }
@@ -109,16 +147,54 @@ int process_solo (void *control, uint8_t *data)
 // TOGGLE MODE ON
 int process_solo_shift (void *control, uint8_t *data)
 {
+	int i, j, k, cc, ch;
 	button_t *ctrl;
 	ctrl = control;
 
-	// TO DO
-	printf ("SOLO_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("SOLO_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
+	// get channel number
+	ch = data [1] - 0x30 + 0x08;
+	
 	// get value from the midi control: 0 or 1 (OFF or ON)
 	ctrl->value = data[2] & 0x01;		// &0x01 as value in midi message is 7F in case of ON
+	// useless as we cannot control leds
 	// switch led on/off accordingly
 	led (ctrl, ctrl->value);
+
+	if (ctrl->value) {
+		// solo ON
+		// get current value of all CC7 channel; if no value set, then fix arbitrary value to 64
+		for (i = 0; i<NB_CHANNEL; i++) {
+			for (j=0; j<NB_RECSHIFT; j++) {
+				k = i * (j+1);
+
+				if (fluid_synth_get_cc (synth, k, 7, &cc) != FLUID_OK) cc = 0x40;
+				// save current CC value to the corresponding slider
+				channel[i][j].slider.value_s = cc;
+				// send CC7 (sound control) to synthetizer as 0 to mute the channel
+				// for all channels but ch (current channel number)
+				if (ch != k) fluid_synth_cc (synth, k, 7, 0);
+				channel[i][j].slider.value = 0;		// set actual value for this slider
+			}
+		}
+	}
+	else {
+		// solo OFF
+		// get current CC value from all sliders
+		for (i = 0; i<NB_CHANNEL; i++) {
+			for (j=0; j<NB_RECSHIFT; j++) {
+				k = i * (j+1);
+
+				// get current CC value from corresponding slider
+				cc = channel[i][j].slider.value_s;
+				// send CC7 (sound control) to synthetizer as cc value to unmute the channel
+				// for all channels but ch (current channel number)
+				if (ch != k) fluid_synth_cc (synth, k, 7, cc);
+				channel[i][j].slider.value = cc;		// set actual value for this slider
+			}
+		}
+	}
 
 	return FLUID_OK;
 }
@@ -131,7 +207,7 @@ int process_mute (void *control, uint8_t *data)
 	button_t *ctrl;
 	ctrl = control;
 	
-	printf ("MUTE: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("MUTE: %02X %02X %02X\n", data[0], data [1], data [2]);
 	// get channel number
 	i = data [1] - 0x30;
 	
@@ -146,18 +222,20 @@ int process_mute (void *control, uint8_t *data)
 		// get current value of CC7 of channel; if no value set, then fix arbitrary value to 64
 		if (fluid_synth_get_cc (synth, i, 7, &cc) != FLUID_OK) cc = 0x40;
 		// save current CC value to the corresponding slider
-		channel[i][0].slider.value = cc;
+		channel[i][0].slider.value_m = cc;
 		// send CC7 (sound control) to synthetizer as 0 to mute the channel
 		// i is the channel number
 		fluid_synth_cc (synth, i, 7, 0);
+		channel[i][0].slider.value = 0;		// set actual value for this slider
 	}
 	else {
 		// mute OFF
 		// get current CC value from the corresponding slider
-		cc = channel[i][0].slider.value;
+		cc = channel[i][0].slider.value_m;
 		// send CC7 (sound control) to synthetizer as cc value to unmute the channel
 		// i is the channel number
 		fluid_synth_cc (synth, i, 7, cc);
+		channel[i][0].slider.value = cc;		// set actual value for this slider
 	}
 
 	return FLUID_OK;
@@ -171,7 +249,7 @@ int process_mute_shift (void *control, uint8_t *data)
 	button_t *ctrl;
 	ctrl = control;
 	
-	printf ("MUTE_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("MUTE_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 	// get channel number
 	i = data [1] - 0x30 + 0x08;
 	
@@ -186,18 +264,21 @@ int process_mute_shift (void *control, uint8_t *data)
 		// get current value of CC7 of channel; if no value set, then fix arbitrary value to 64
 		if (fluid_synth_get_cc (synth, i, 7, &cc) != FLUID_OK) cc = 0x40;
 		// save current CC value to the corresponding slider
-		channel[i-0x08][1].slider.value = cc;
+		channel[i-0x08][1].slider.value_m = cc;
 		// send CC7 (sound control) to synthetizer as 0 to mute the channel
 		// i is the channel number
 		fluid_synth_cc (synth, i, 7, 0);
+		channel[i-0x08][1].slider.value = 0;		// set actual value for this slider
+
 	}
 	else {
 		// mute OFF
 		// get current CC value from the corresponding slider
-		cc = channel[i-0x08][1].slider.value;
+		cc = channel[i-0x08][1].slider.value_m;
 		// send CC7 (sound control) to synthetizer as cc value to unmute the channel
 		// i is the channel number
 		fluid_synth_cc (synth, i, 7, cc);
+		channel[i-0x08][1].slider.value_m = cc;		// set actual value for this slider
 	}
 
 	return FLUID_OK;
@@ -210,7 +291,7 @@ int process_rec (void *control, uint8_t *data)
 	button_t *ctrl;
 	ctrl = control;
 
-	printf ("REC: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("REC: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get value from the midi control: 0 or 1 (OFF or ON)
 	ctrl->value = data[2] & 0x01;		// &0x01 as value in midi message is 7F in case of ON
@@ -227,7 +308,7 @@ int process_cycle (void *control, uint8_t *data)
 	button_t *ctrl;
 	ctrl = control;
 
-	printf ("CYCLE: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("CYCLE: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get value from the midi control: 0 or 1 (OFF or ON)
 	ctrl->value = data[2] & 0x01;		// &0x01 as value in midi message is 7F in case of ON
@@ -244,7 +325,7 @@ int process_track_l (void *control, uint8_t *data)
 	button_t *ctrl;
 	ctrl = control;
 
-	printf ("TRACK_L: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("TRACK_L: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
 	if (data [2] != 0) {
@@ -265,7 +346,7 @@ int process_track_r (void *control, uint8_t *data)
 	button_t *ctrl;
 	ctrl = control;
 
-	printf ("TRACK_R: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("TRACK_R: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
 	if (data [2] != 0) {
@@ -286,7 +367,7 @@ int process_track_l_shift (void *control, uint8_t *data)
 	button_t *ctrl;
 	ctrl = control;
 
-	printf ("TRACK_L_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("TRACK_L_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
 	if (data [2] != 0) {
@@ -307,7 +388,7 @@ int process_track_r_shift (void *control, uint8_t *data)
 	button_t *ctrl;
 	ctrl = control;
 
-	printf ("TRACK_R_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("TRACK_R_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
 	if (data [2] != 0) {
@@ -328,7 +409,7 @@ int process_rwd (void *control, uint8_t *data)
 	button_t *ctrl;
 	ctrl = control;
 
-	printf ("RWD: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("RWD: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
 	if (data [2] != 0) {
@@ -376,7 +457,7 @@ int process_fwd (void *control, uint8_t *data)
 	button_t *ctrl;
 	ctrl = control;
 
-	printf ("FWD: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("FWD: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
 	if (data [2] != 0) {
@@ -424,7 +505,7 @@ int process_rwd_shift (void *control, uint8_t *data)
 	button_t *ctrl;
 	ctrl = control;
 
-	printf ("RWD_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("RWD_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
 	if (data [2] != 0) {
@@ -465,7 +546,7 @@ int process_fwd_shift (void *control, uint8_t *data)
 	button_t *ctrl;
 	ctrl = control;
 
-	printf ("FWD_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("FWD_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
 	if (data [2] != 0) {
@@ -506,7 +587,7 @@ int process_play (void *control, uint8_t *data)
 	button_t *ctrl;
 	ctrl = control;
 
-	printf ("PLAY: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("PLAY: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
 	if (data [2] != 0) {
@@ -533,7 +614,7 @@ int process_stop (void *control, uint8_t *data)
 	button_t *ctrl;
 	ctrl = control;
 
-	printf ("STOP: %02X %02X %02X\n", data[0], data [1], data [2]);
+//	printf ("STOP: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// do something only if button is pressed (but don't do anything if released)
 	if (data [2] != 0) {

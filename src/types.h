@@ -43,6 +43,8 @@
 typedef struct {								// structure for each control
 	uint8_t message [3];						// midi message of the control (sent from device to PI)
 	uint8_t value;								// value of the control
+	uint8_t value_m;					// storage for value of the control in case of mute
+	uint8_t value_s;					// storage for value of the control in case of solo
 	int (*action) (void*, uint8_t*);		// function to be called if control is actioned
 } slider_t;
 

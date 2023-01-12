@@ -159,8 +159,6 @@ int main ( int argc, char *argv[] )
 
 	// create new player, but don't load anything for now
 	player = new_fluid_player(synth);
-// callback for handling midi events from midi file
-//fluid_player_set_playback_callback	(player, handle_midi_event, (void *) synth);
 
 	// load default midi and sf2 files before main loop
 	load_midi_sf2 ();
