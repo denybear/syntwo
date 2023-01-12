@@ -135,13 +135,11 @@ int main ( int argc, char *argv[] )
 // METTRE LE NUMERO DE DEVICE EN ARGV???
 	fluid_settings_setstr(settings, "midi.alsa.device", "hw:2,0,0");
 
-	fluid_settings_setstr(settings, "audio.driver", "alsa");
 // METTRE LE NUMERO DE DEVICE EN ARGV???
-	fluid_settings_setstr(settings, "audio.alsa.device", "hw:3,0,0");
-	fluid_settings_setstr(settings, "audio.periods", "16");
-	fluid_settings_setstr(settings, "audio.period-size", "128");
+	fluid_settings_setstr(settings, "audio.driver", "alsa");
+	fluid_settings_setstr(settings, "audio.alsa.device", "plughw:CARD=io2");
+//	fluid_settings_setstr(settings, "audio.alsa.device", "sysdefault:CARD=io2");
 
-	// fluid_settings_setstr(settings, "synth.sample-rate", "48000.0");
 
 	// create synth
 	synth = new_fluid_synth(settings);

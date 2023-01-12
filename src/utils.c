@@ -64,7 +64,7 @@ int load_midi_sf2 () {
 			if (get_full_filename (name, new_midi_num, "./songs/") == TRUE) {
 				// if a file exists
 				if (fluid_is_midifile(name)) {
-					
+printf ("midi:%s\n", name);
 					// delete current fluid player
 					delete_fluid_player (player);
 					// create new player
@@ -98,6 +98,7 @@ int load_midi_sf2 () {
 			if (get_full_filename (name, new_sf2_num, "./soundfonts/") == TRUE) {
 				// if a file exists
 				if (fluid_is_soundfont(name)) {
+printf ("sf2:%s\n", name);
 					// unload previously loaded soundfont
 					// this is to prevent memory issues (lack of memory)
 					// however make sure we don't unload the only soundfont in memory
