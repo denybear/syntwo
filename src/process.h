@@ -25,6 +25,10 @@ int process_rwd_shift (void *, uint8_t *);
 int process_fwd_shift (void *, uint8_t *);
 int process_play (void *, uint8_t *);
 int process_stop (void *, uint8_t *);
+int process_record (void *, uint8_t *);
+int process_set (void *, uint8_t *);
+int process_marker_l (void *, uint8_t *);
+int process_marker_r (void *, uint8_t *);
 int handle_midi_event(void*, fluid_midi_event_t*);
 
 

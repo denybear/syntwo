@@ -98,7 +98,7 @@ int process_solo (void *control, uint8_t *data)
 //	printf ("SOLO: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get channel number
-	ch = data [1] - 0x30;
+	ch = data [1] - 0x20;
 	
 	// get value from the midi control: 0 or 1 (OFF or ON)
 	ctrl->value = data[2] & 0x01;		// &0x01 as value in midi message is 7F in case of ON
@@ -111,15 +111,17 @@ int process_solo (void *control, uint8_t *data)
 		// get current value of all CC7 channel; if no value set, then fix arbitrary value to 64
 		for (i = 0; i<NB_CHANNEL; i++) {
 			for (j=0; j<NB_RECSHIFT; j++) {
-				k = i * (j+1);
+				k = i + (j * 8);
 
 				if (fluid_synth_get_cc (synth, k, 7, &cc) != FLUID_OK) cc = 0x40;
 				// save current CC value to the corresponding slider
 				channel[i][j].slider.value_s = cc;
 				// send CC7 (sound control) to synthetizer as 0 to mute the channel
 				// for all channels but ch (current channel number)
-				if (ch != k) fluid_synth_cc (synth, k, 7, 0);
-				channel[i][j].slider.value = 0;		// set actual value for this slider
+				if (ch != k) {
+					fluid_synth_cc (synth, k, 7, 0);
+					channel[i][j].slider.value = 0;		// set actual value for this slider
+				}
 			}
 		}
 	}
@@ -128,14 +130,16 @@ int process_solo (void *control, uint8_t *data)
 		// get current CC value from all sliders
 		for (i = 0; i<NB_CHANNEL; i++) {
 			for (j=0; j<NB_RECSHIFT; j++) {
-				k = i * (j+1);
+				k = i + (j * 8);
 
 				// get current CC value from corresponding slider
 				cc = channel[i][j].slider.value_s;
 				// send CC7 (sound control) to synthetizer as cc value to unmute the channel
 				// for all channels but ch (current channel number)
-				if (ch != k) fluid_synth_cc (synth, k, 7, cc);
-				channel[i][j].slider.value = cc;		// set actual value for this slider
+				if (ch != k) {
+					fluid_synth_cc (synth, k, 7, cc);
+					channel[i][j].slider.value = cc;		// set actual value for this slider
+				}
 			}
 		}
 	}
@@ -154,7 +158,7 @@ int process_solo_shift (void *control, uint8_t *data)
 //	printf ("SOLO_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get channel number
-	ch = data [1] - 0x30 + 0x08;
+	ch = data [1] - 0x20 + 0x08;
 	
 	// get value from the midi control: 0 or 1 (OFF or ON)
 	ctrl->value = data[2] & 0x01;		// &0x01 as value in midi message is 7F in case of ON
@@ -167,15 +171,17 @@ int process_solo_shift (void *control, uint8_t *data)
 		// get current value of all CC7 channel; if no value set, then fix arbitrary value to 64
 		for (i = 0; i<NB_CHANNEL; i++) {
 			for (j=0; j<NB_RECSHIFT; j++) {
-				k = i * (j+1);
+				k = i + (j * 8);
 
 				if (fluid_synth_get_cc (synth, k, 7, &cc) != FLUID_OK) cc = 0x40;
 				// save current CC value to the corresponding slider
 				channel[i][j].slider.value_s = cc;
 				// send CC7 (sound control) to synthetizer as 0 to mute the channel
 				// for all channels but ch (current channel number)
-				if (ch != k) fluid_synth_cc (synth, k, 7, 0);
-				channel[i][j].slider.value = 0;		// set actual value for this slider
+				if (ch != k) {
+					fluid_synth_cc (synth, k, 7, 0);
+					channel[i][j].slider.value = 0;		// set actual value for this slider
+				}
 			}
 		}
 	}
@@ -184,14 +190,16 @@ int process_solo_shift (void *control, uint8_t *data)
 		// get current CC value from all sliders
 		for (i = 0; i<NB_CHANNEL; i++) {
 			for (j=0; j<NB_RECSHIFT; j++) {
-				k = i * (j+1);
+				k = i + (j * 8);
 
 				// get current CC value from corresponding slider
 				cc = channel[i][j].slider.value_s;
 				// send CC7 (sound control) to synthetizer as cc value to unmute the channel
 				// for all channels but ch (current channel number)
-				if (ch != k) fluid_synth_cc (synth, k, 7, cc);
-				channel[i][j].slider.value = cc;		// set actual value for this slider
+				if (ch != k) {
+					fluid_synth_cc (synth, k, 7, cc);
+					channel[i][j].slider.value = cc;		// set actual value for this slider
+				}
 			}
 		}
 	}
@@ -628,6 +636,114 @@ int process_stop (void *control, uint8_t *data)
 	return FLUID_OK;
 }
 
+// process function called everytime record button is pressed
+// MOMENTARY MODE ON
+int process_record (void *control, uint8_t *data)
+{
+	button_t *ctrl;
+	ctrl = control;
+
+//	printf ("RECORD: %02X %02X %02X\n", data[0], data [1], data [2]);
+
+	// do something only if button is pressed (but don't do anything if released)
+	if (data [2] != 0) {
+		// stop playing the midi file, if any
+		fluid_player_stop (player);
+	}
+
+	// no need to update value of ctrl (it is not used)
+	// no need to set any led (momentary mode ON)
+
+	return FLUID_OK;
+}
+
+// process function called everytime set button is pressed
+// MOMENTARY MODE ON
+int process_set (void *control, uint8_t *data)
+{
+	int mark, i;
+	button_t *ctrl;
+	ctrl = control;
+
+//	printf ("SET: %02X %02X %02X\n", data[0], data [1], data [2]);
+
+	// do something only if button is pressed (but don't do anything if released)
+	if (data [2] != 0) {
+		// get current tick
+		mark = fluid_player_get_current_tick (player);
+		// save it to the table at the first available (ie. non-0) position
+		// also make sure mark is not 0 (meaning : we are at the beginning of the file)
+		if (mark != 0) {
+			for (i = 0; i < NB_MARKER; i++) {
+				if (marker [i] == 0) {
+					marker [i] = mark;		// free slot found in marker table: store marker in table
+					break;					// and leave loop
+				}
+			}
+		}
+	}
+	// no need to update value of ctrl (it is not used)
+	// no need to set any led (no led for this control)
+
+	return FLUID_OK;
+}
+
+// process function called everytime marker_l button is pressed
+// MOMENTARY MODE ON
+int process_marker_l (void *control, uint8_t *data)
+{
+	button_t *ctrl;
+	ctrl = control;
+
+//	printf ("MARKER_L: %02X %02X %02X\n", data[0], data [1], data [2]);
+
+	// do something only if button is pressed (but don't do anything if released)
+	if (data [2] != 0) {
+		// leaves if no marker is set for current position
+		if (marker [marker_pos] == 0) return FLUID_OK;
+
+		// decrement position in marker table
+		if (marker_pos > 0) marker_pos--;
+
+		// seek position in the file set by the marker
+		fluid_player_seek (player, marker [marker_pos]);
+	}
+
+	// no need to update value of ctrl (it is not used)
+	// no need to set any led (no led for this control)
+
+	return FLUID_OK;
+}
+
+// process function called everytime marker_r button is pressed
+// MOMENTARY MODE ON
+int process_marker_r (void *control, uint8_t *data)
+{
+	button_t *ctrl;
+	ctrl = control;
+
+//	printf ("MARKER_R: %02X %02X %02X\n", data[0], data [1], data [2]);
+
+	// do something only if button is pressed (but don't do anything if released)
+	if (data [2] != 0) {
+		// leaves if no marker is set for current position
+		if (marker [marker_pos] == 0) return FLUID_OK;
+
+		// increment position in marker table
+		if (marker_pos < (NB_MARKER - 1)) marker_pos++;
+
+		// in case there is no marker on new position, go back to old position
+		if (marker [marker_pos] == 0) marker_pos--;
+
+		// seek position in the file set by the marker
+		fluid_player_seek (player, marker [marker_pos]);
+	}
+
+	// no need to update value of ctrl (it is not used)
+	// no need to set any led (no led for this control)
+
+	return FLUID_OK;
+}
 
 // fluid callback called every time a MIDI message is received
 int handle_midi_event(void* data, fluid_midi_event_t* event)

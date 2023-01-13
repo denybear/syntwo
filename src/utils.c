@@ -74,7 +74,7 @@ printf ("midi:%s\n", name);
 					fluid_player_add(player, name);
 
 					// set endless looping of current file
-					fluid_player_set_loop (player, -1);
+					//fluid_player_set_loop (player, -1);
 
 					// loading has been done
 					current_midi_num = new_midi_num;
@@ -83,6 +83,10 @@ printf ("midi:%s\n", name);
 					initial_bpm = -1;
 					now = 0;			// used for automated tempo adjustment (at press of switch)
 					previous = 0;
+
+					// clear table of time markers
+					memset (&marker [0], 0, sizeof (int) * NB_MARKER);
+					marker_pos = 0;
 
 					// we are at initial BPM, set leds accordingly
 					// this is useless as we cannot control the leds for now

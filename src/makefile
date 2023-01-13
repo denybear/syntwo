@@ -31,8 +31,8 @@ EXTENSION = .c
 #Set your desired exe output file name here
 #REMOVE -g TO REMOVE DEBUGGER
 syntwo.a: $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
-#	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -Xlinker --verbose
+	$(CC) -g -o $@ $^ $(CFLAGS) $(LIBS)
+#	$(CC) -g -o $@ $^ $(CFLAGS) $(LIBS) -Xlinker --verbose
 #Clean and move executable one level up
 	rm -f *.o *~ core *~
 	mv $@ ../$@

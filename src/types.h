@@ -38,6 +38,7 @@
 #define NB_CHANNEL	8	// 8 channel
 #define NB_RECSHIFT	2	// shift key has 2 positions (non-shift & shift)
 #define NB_CYCSHIFT	2	// shift key has 2 positions (non-shift & shift)
+#define NB_MARKER	10	// up to 10 time markers for a song
 
 /* types */
 typedef struct {								// structure for each control

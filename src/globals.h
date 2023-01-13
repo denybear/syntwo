@@ -35,6 +35,10 @@ extern int volume;
 extern uint64_t now;       // time now
 extern uint64_t previous;  // time when "beat" key was last pressed
 
+/* markers */
+extern int marker [NB_MARKER];     // table of time markers in the song
+extern int marker_pos;             // position of marker selected by < > in the table
+
 /* definition of the MIDI controler controls */
 extern channel_t channel [NB_CHANNEL] [NB_RECSHIFT];		// 8 channel control * 2 (without shift and with shift; REC key)
 extern button_t cycle;							// cycle button used as shift key

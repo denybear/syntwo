@@ -59,6 +59,10 @@ static void init_globals ( )
 	now = 0;			// used for automated tempo adjustment (at press of switch)
 	previous = 0;
 	previous_led = 0;	// time when LED was turned ON
+
+	// clear table of time markers... this is a bit useless as we do this at every new load of a song
+	memset (&marker [0], 0, sizeof (int) * NB_MARKER);
+	marker_pos = 0;
 }
 
 

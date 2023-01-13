@@ -154,7 +154,7 @@ void read_config (void)
 	// record button
 	record.message [0] = 0xB0;
 	record.message [1] = 0x2D;
-	record.action = &process;
+	record.action = &process_record;
 	record.led_on [0] = 0xB0;
 	record.led_on [1] = 0x2D;
 	record.led_on [2] = 0x7F;
@@ -165,7 +165,7 @@ void read_config (void)
 	// set button
 	set.message [0] = 0xB0;
 	set.message [1] = 0x3C;
-	set.action = &process;
+	set.action = &process_set;
 	set.led_on [0] = 0xB0;
 	set.led_on [1] = 0x3C;
 	set.led_on [2] = 0x7F;
@@ -176,7 +176,7 @@ void read_config (void)
 	// marker_l button
 	marker_l.message [0] = 0xB0;
 	marker_l.message [1] = 0x3D;
-	marker_l.action = &process;
+	marker_l.action = &process_marker_l;
 	marker_l.led_on [0] = 0xB0;
 	marker_l.led_on [1] = 0x3D;
 	marker_l.led_on [2] = 0x7F;
@@ -187,7 +187,7 @@ void read_config (void)
 	// marker_r button
 	marker_r.message [0] = 0xB0;
 	marker_r.message [1] = 0x3E;
-	marker_r.action = &process;
+	marker_r.action = &process_marker_r;
 	marker_r.led_on [0] = 0xB0;
 	marker_r.led_on [1] = 0x3E;
 	marker_r.led_on [2] = 0x7F;
