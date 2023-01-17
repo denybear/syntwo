@@ -8,3 +8,5 @@ int get_full_filename (char *, unsigned char, char *);
 int load_midi_sf2 ();
 uint64_t micros ();
 void led (button_t *, int);
+int save_song (int);
+int load_song (int);

@@ -76,11 +76,9 @@ printf ("midi:%s\n", name);
 					// set endless looping of current file
 					//fluid_player_set_loop (player, -1);
 
-					// loading has been done
-					current_midi_num = new_midi_num;
-
 					// initial bpm of the file is set to -1 to force reading of initial bpm if bpm pads are pressed
 					initial_bpm = -1;
+					bpm = 0	;			// bpm is only set when file is playing
 					now = 0;			// used for automated tempo adjustment (at press of switch)
 					previous = 0;
 
@@ -88,10 +86,16 @@ printf ("midi:%s\n", name);
 					memset (&marker [0], 0, sizeof (int) * NB_MARKER);
 					marker_pos = 0;
 
+					// load a save of previous settings (sliders values, knobs...), if exists
+					load_song (new_midi_num);
+
 					// we are at initial BPM, set leds accordingly
 					// this is useless as we cannot control the leds for now
 					led (&rwd[0], ON);
 					led (&fwd[0], ON);
+
+					// loading has been done
+					current_midi_num = new_midi_num;
 				}
 			}
 		}
@@ -147,3 +151,123 @@ void led (button_t* button, int on_off) {
 		// send_midi (button->led_off);
 	}
 }
+
+
+// Save the context of the song
+int save_song (int numfile) {
+
+	int i,j,k,cc;
+	FILE *fp;
+	char s[20];
+
+	// open file
+	sprintf (s, "./save/%02X", numfile);
+	if (fp = fopen(s,"wt") == NULL) return NULL;
+	
+	// save volume
+	fprintf (fp, "vol %d\n", volume);
+
+	// save sliders
+	for (j = 0; j < NB_RECSHIFT; j++) {
+		for (i = 0; i < NB_CHANNEL; i++) {
+			k = i + (j * 8);
+
+			if (fluid_synth_get_cc (synth, k, 7, &cc) != FLUID_OK) cc = 0x40;
+
+			// save current CC slider value
+			fprintf (fp, "slider %02X %02X\n", k, cc);
+		}
+	}
+
+	// save knobs
+	for (j = 0; j < NB_RECSHIFT; j++) {
+		for (i = 0; i < NB_CHANNEL; i++) {
+			k = i + (j * 8);
+
+			if (fluid_synth_get_cc (synth, k, 8, &cc) != FLUID_OK) cc = 0x40;
+
+			// save current CC slider value
+			fprintf (fp, "knob %02X %02X\n", k, cc);
+		}
+	}
+
+	// save markers
+	for (i = 0; i < NB_MARKER; i++) fprintf (fp, "marker %02d %d\n", i, marker [i]);
+
+	// close file
+	fclose(fp);
+	return TRUE;
+}
+
+
+// Load the context of the song
+int load_song (int numfile) {
+
+	int i,j,k,cc;
+	FILE *fp;
+	char s[20];
+
+	// open file
+	sprintf (s, "./save/%02X", numfile);
+	if (fp = fopen(s,"rt") == NULL) return NULL;
+
+	// load volume
+	fscanf (fp, "vol %d\n", &volume);
+	// assign
+	if (volume <= 0) volume = 2;	// in case volume is 0, set to default (ie. 2)
+	if (volume >10) volume = 10;
+	// set gain: 0 < gain < 1.0 (default = 0.2)
+	fluid_settings_setnum (settings, "synth.gain", (float) volume/10.0f);
+
+	// this part is useless as we cannot control the leds for now
+	// if volume == 0, then light on volume down pad to indicate we have reached the lower limit
+	if (volume == 0) {
+			led (ctrl, ON);
+			led (&fwd[1], OFF);		// this is a bit ugly
+	}
+	else {
+		// if volume == 2 (default value), then light on both pads, in PENDING mode
+		if (volume == 2) {
+			led (ctrl, ON);
+			led (&fwd[1], ON);		// this is a bit ugly
+		}
+		// in other cases, turn light of both pads (voldown and up)
+		else {
+			led (ctrl, OFF);
+			led (&fwd[1], OFF);		// this is a bit ugly
+		}
+	}
+
+
+	// load sliders
+	for (j = 0; j < NB_RECSHIFT; j++) {
+		for (i = 0; i < NB_CHANNEL; i++) {
+
+			// load current CC slider value
+			fscanf (fp, "slider %02X %02X\n", &k, &cc);
+			// assign
+			fluid_synth_cc (synth, k, 7, cc);
+		}
+	}
+
+	// load knobs
+	for (j = 0; j < NB_RECSHIFT; j++) {
+		for (i = 0; i < NB_CHANNEL; i++) {
+
+			// load current CC knob value
+			fscanf (fp, "knob %02X %02X\n", &k, &cc);
+			// assign
+			fluid_synth_cc (synth, k, 8, cc);
+		}
+	}
+
+	// load markers
+	for (i = 0; i < NB_MARKER; i++) fscanf (fp, "marker %02d %d\n", &k, &marker [k]);
+	marker_pos = 0;		// reset marker_pos
+
+	// close file
+	fclose(fp);
+	return TRUE;
+}
+
+

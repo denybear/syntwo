@@ -410,6 +410,9 @@ int process_track_r_shift (void *control, uint8_t *data)
 	return FLUID_OK;
 }
 
+//*******************
+// CHECK IF IT WORKS WHEN THE FILE IS NOT PLAYING
+//*******************
 // process function called everytime rwd button is pressed
 // MOMENTARY MODE ON
 int process_rwd (void *control, uint8_t *data)
@@ -458,6 +461,9 @@ int process_rwd (void *control, uint8_t *data)
 	return FLUID_OK;
 }
 
+//*******************
+// CHECK IF IT WORKS WHEN THE FILE IS NOT PLAYING
+//*******************
 // process function called everytime fwd button is pressed
 // MOMENTARY MODE ON
 int process_fwd (void *control, uint8_t *data)
@@ -600,7 +606,6 @@ int process_play (void *control, uint8_t *data)
 	// do something only if button is pressed (but don't do anything if released)
 	if (data [2] != 0) {
 		// load new midi file and new sf2, if required
-// SHOULD WE DO THIS IN THE MAIN THREAD???
 		load_midi_sf2 ();
 		
 		// rewind to the beggining of the file
@@ -647,8 +652,9 @@ int process_record (void *control, uint8_t *data)
 
 	// do something only if button is pressed (but don't do anything if released)
 	if (data [2] != 0) {
-		// stop playing the midi file, if any
-		fluid_player_stop (player);
+
+		// make sure no file is playing to allow save !
+		if ((fluid_player_get_status (player)== FLUID_PLAYER_DONE) || (fluid_player_get_status (player)== FLUID_PLAYER_READY)) save_song (new_midi_num);
 	}
 
 	// no need to update value of ctrl (it is not used)
@@ -677,6 +683,7 @@ int process_set (void *control, uint8_t *data)
 			for (i = 0; i < NB_MARKER; i++) {
 				if (marker [i] == 0) {
 					marker [i] = mark;		// free slot found in marker table: store marker in table
+printf ("set mark %d at tick %d\n", i, mark);
 					break;					// and leave loop
 				}
 			}
@@ -707,6 +714,7 @@ int process_marker_l (void *control, uint8_t *data)
 
 		// seek position in the file set by the marker
 		fluid_player_seek (player, marker [marker_pos]);
+printf ("marker left, index %d tick %d\n", marker_pos, marker [marker_pos]);
 	}
 
 	// no need to update value of ctrl (it is not used)
@@ -737,6 +745,7 @@ int process_marker_r (void *control, uint8_t *data)
 
 		// seek position in the file set by the marker
 		fluid_player_seek (player, marker [marker_pos]);
+printf ("marker right, index %d tick %d\n", marker_pos, marker [marker_pos]);
 	}
 
 	// no need to update value of ctrl (it is not used)
