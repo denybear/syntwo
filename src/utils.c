@@ -162,10 +162,13 @@ int save_song (int numfile) {
 
 	// open file
 	sprintf (s, "./save/%02X", numfile);
-	if (fp = fopen(s,"wt") == NULL) return NULL;
+	if ((fp = fopen(s,"wt")) == NULL) return FALSE;
 	
 	// save volume
 	fprintf (fp, "vol %d\n", volume);
+
+	// save bpm
+	fprintf (fp, "bpm %d\n", bpm);
 
 	// save sliders
 	for (j = 0; j < NB_RECSHIFT; j++) {
@@ -209,7 +212,7 @@ int load_song (int numfile) {
 
 	// open file
 	sprintf (s, "./save/%02X", numfile);
-	if (fp = fopen(s,"rt") == NULL) return NULL;
+	if ((fp = fopen(s,"rt")) == NULL) return FALSE;
 
 	// load volume
 	fscanf (fp, "vol %d\n", &volume);
@@ -219,21 +222,29 @@ int load_song (int numfile) {
 	// set gain: 0 < gain < 1.0 (default = 0.2)
 	fluid_settings_setnum (settings, "synth.gain", (float) volume/10.0f);
 
+	// load bpm
+	fscanf (fp, "bpm %d\n", &bpm);
+	// assign
+	if (bpm !=0) {
+		initial_bpm = (fluid_player_get_bpm (player) == FLUID_FAILED) ? 0 : fluid_player_get_bpm (player);
+		fluid_player_set_tempo (player, FLUID_PLAYER_TEMPO_EXTERNAL_BPM, bpm);
+	}
+
 	// this part is useless as we cannot control the leds for now
 	// if volume == 0, then light on volume down pad to indicate we have reached the lower limit
 	if (volume == 0) {
-			led (ctrl, ON);
+			led (&rwd[1], ON);
 			led (&fwd[1], OFF);		// this is a bit ugly
 	}
 	else {
 		// if volume == 2 (default value), then light on both pads, in PENDING mode
 		if (volume == 2) {
-			led (ctrl, ON);
+			led (&rwd[1], ON);
 			led (&fwd[1], ON);		// this is a bit ugly
 		}
 		// in other cases, turn light of both pads (voldown and up)
 		else {
-			led (ctrl, OFF);
+			led (&rwd[1], OFF);
 			led (&fwd[1], OFF);		// this is a bit ugly
 		}
 	}
@@ -262,7 +273,12 @@ int load_song (int numfile) {
 	}
 
 	// load markers
-	for (i = 0; i < NB_MARKER; i++) fscanf (fp, "marker %02d %d\n", &k, &marker [k]);
+	for (i = 0; i < NB_MARKER; i++) {
+		// loading shall be done in 2 steps as we cannot read within 1 single fscanf
+		// both value of k and of an array object indexed on k
+		fscanf (fp, "marker %02d ", &k);
+		fscanf (fp, "%d\n", &marker [k]);
+	}
 	marker_pos = 0;		// reset marker_pos
 
 	// close file

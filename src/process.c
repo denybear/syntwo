@@ -410,9 +410,6 @@ int process_track_r_shift (void *control, uint8_t *data)
 	return FLUID_OK;
 }
 
-//*******************
-// CHECK IF IT WORKS WHEN THE FILE IS NOT PLAYING
-//*******************
 // process function called everytime rwd button is pressed
 // MOMENTARY MODE ON
 int process_rwd (void *control, uint8_t *data)
@@ -461,9 +458,6 @@ int process_rwd (void *control, uint8_t *data)
 	return FLUID_OK;
 }
 
-//*******************
-// CHECK IF IT WORKS WHEN THE FILE IS NOT PLAYING
-//*******************
 // process function called everytime fwd button is pressed
 // MOMENTARY MODE ON
 int process_fwd (void *control, uint8_t *data)
@@ -608,6 +602,8 @@ int process_play (void *control, uint8_t *data)
 		// load new midi file and new sf2, if required
 		load_midi_sf2 ();
 		
+		// reset marker position
+		marker_pos = 0;
 		// rewind to the beggining of the file
 		fluid_player_seek (player, 0);
 		// play the midi files, if any
@@ -683,7 +679,7 @@ int process_set (void *control, uint8_t *data)
 			for (i = 0; i < NB_MARKER; i++) {
 				if (marker [i] == 0) {
 					marker [i] = mark;		// free slot found in marker table: store marker in table
-printf ("set mark %d at tick %d\n", i, mark);
+//					printf ("set mark %d at tick %d\n", i, mark);
 					break;					// and leave loop
 				}
 			}
@@ -714,7 +710,7 @@ int process_marker_l (void *control, uint8_t *data)
 
 		// seek position in the file set by the marker
 		fluid_player_seek (player, marker [marker_pos]);
-printf ("marker left, index %d tick %d\n", marker_pos, marker [marker_pos]);
+//		printf ("marker left, index %d tick %d\n", marker_pos, marker [marker_pos]);
 	}
 
 	// no need to update value of ctrl (it is not used)
@@ -745,7 +741,7 @@ int process_marker_r (void *control, uint8_t *data)
 
 		// seek position in the file set by the marker
 		fluid_player_seek (player, marker [marker_pos]);
-printf ("marker right, index %d tick %d\n", marker_pos, marker [marker_pos]);
+//		printf ("marker right, index %d tick %d\n", marker_pos, marker [marker_pos]);
 	}
 
 	// no need to update value of ctrl (it is not used)

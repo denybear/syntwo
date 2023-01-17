@@ -19,6 +19,10 @@
 #endif
 #include <fluidsynth.h>
 
+/* default devices */
+#define MIDIDEVICE	"hw:2,0,0"
+#define AUDIODEVICE	"plughw:CARD=io2"
+
 /* default GPIO pins */
 #define LED_GPIO	19
 #define SWITCH_GPIO	26

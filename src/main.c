@@ -99,6 +99,30 @@ static void signal_handler ( int sig )
 int main ( int argc, char *argv[] )
 {
 	int i,j;
+	char audio_device [25];
+	char midi_device [25];
+
+	// default devices
+	strcpy (audio_device, AUDIODEVICE);
+	strcpy (midi_device, MIDIDEVICE);
+
+	// process argc argv
+	// usage: syntwo audio_device midi_device
+	if (argc >=2) {
+		if (strlen (argv [1]) > 20) {
+			fprintf (stderr, "audio device name too long\n");
+			exit (0);
+		}
+		strcpy (audio_device, argv [1]);
+	}
+	if (argc >=3) {
+		if (strlen (argv [2]) > 20) {
+			fprintf (stderr, "midi device name too long\n");
+			exit (0);
+		}
+		strcpy (midi_device, argv [2]);
+	}
+
 
 	/* install a signal handler to properly quit */
 #ifdef WIN32
@@ -134,16 +158,11 @@ int main ( int argc, char *argv[] )
 	settings = new_fluid_settings();
 
 	// settings for fluidsynth midi and audio
+	fluid_settings_setstr(settings, "audio.driver", "alsa");
+	fluid_settings_setstr(settings, "audio.alsa.device", audio_device);
 
 	fluid_settings_setstr(settings, "midi.driver", "alsa_raw");
-// METTRE LE NUMERO DE DEVICE EN ARGV???
-	fluid_settings_setstr(settings, "midi.alsa.device", "hw:2,0,0");
-
-// METTRE LE NUMERO DE DEVICE EN ARGV???
-	fluid_settings_setstr(settings, "audio.driver", "alsa");
-	fluid_settings_setstr(settings, "audio.alsa.device", "plughw:CARD=io2");
-//	fluid_settings_setstr(settings, "audio.alsa.device", "sysdefault:CARD=io2");
-
+	fluid_settings_setstr(settings, "midi.alsa.device", midi_device);
 
 	// create synth
 	synth = new_fluid_synth(settings);
