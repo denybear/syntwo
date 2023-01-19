@@ -123,8 +123,12 @@ int main ( int argc, char *argv[] )
 		strcpy (midi_device, argv [2]);
 	}
 
+	// init GPIO to enable external "beat" switch (tap tempo)
+	gpio_state = init_gpio ();
 
-	/* install a signal handler to properly quit */
+
+	// install a signal handler to properly quit
+	// this shall be done after init pigpio otherwise pigpio implements its own signal handling
 #ifdef WIN32
 	signal ( SIGINT, signal_handler );
 	signal ( SIGABRT, signal_handler );
@@ -134,11 +138,9 @@ int main ( int argc, char *argv[] )
 	signal ( SIGTERM, signal_handler );
 	signal ( SIGHUP, signal_handler );
 	signal ( SIGINT, signal_handler );
+	signal ( SIGCHLD, signal_handler );
 #endif
 
-
-	// init GPIO to enable external "beat" switch (tap tempo)
-	gpio_state = init_gpio ();
 
 	// init global variables and set midi message values
 	init_globals ();
