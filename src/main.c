@@ -99,8 +99,8 @@ static void signal_handler ( int sig )
 int main ( int argc, char *argv[] )
 {
 	int i,j;
-	char audio_device [25];
-	char midi_device [25];
+	char audio_device [50];
+	char midi_device [50];
 
 	// default devices
 	strcpy (audio_device, AUDIODEVICE);
@@ -109,14 +109,14 @@ int main ( int argc, char *argv[] )
 	// process argc argv
 	// usage: syntwo audio_device midi_device
 	if (argc >=2) {
-		if (strlen (argv [1]) > 20) {
+		if (strlen (argv [1]) > 45) {
 			fprintf (stderr, "audio device name too long\n");
 			exit (0);
 		}
 		strcpy (audio_device, argv [1]);
 	}
 	if (argc >=3) {
-		if (strlen (argv [2]) > 20) {
+		if (strlen (argv [2]) > 45) {
 			fprintf (stderr, "midi device name too long\n");
 			exit (0);
 		}
