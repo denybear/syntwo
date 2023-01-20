@@ -15,6 +15,7 @@ extern fluid_audio_driver_t* adriver;
 
 
 // define if gpio is running for external beat switch and LED
+extern int gpio_deamon;    // deamon id for pigpiod
 extern int gpio_state;      // OFF = gpio OFF: ON = GPIO ON 
 extern uint64_t previous_led;  // time when switch was set as on
 

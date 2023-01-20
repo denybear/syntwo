@@ -13,6 +13,8 @@
 
 
 // you need to have root priviledges for it to work
+// do not use, use gpio deamon instead
+/*
 int init_gpio ()
 {
 	if (gpioInitialise() == PI_INIT_FAILED) {
@@ -20,7 +22,7 @@ int init_gpio ()
     	return OFF;
 	}
 
-	/* Set GPIO modes */
+	// Set GPIO modes
 	gpioSetMode(LED_GPIO, PI_OUTPUT);
 	gpioWrite (LED_GPIO, OFF);					// at start, LED is off
 
@@ -29,12 +31,41 @@ int init_gpio ()
 	// benefits of pull-up is that way, no voltage are input in the pins; pins are only put to GND
 	return ON;
 }
+*/
+
+int init_gpio ()
+{
+	gpio_deamon = pigpio_start(0,0);		// connect to localhost on port 8888
+
+	if (gpio_deamon < 0) {
+    	fprintf(stderr, "pigpio initialisation failed\n");
+    	return OFF;
+	}
+
+	/* Set GPIO modes */
+	set_mode (gpio_deamon, LED_GPIO, PI_OUTPUT);
+	gpio_write (gpio_deamon, LED_GPIO, OFF);					// at start, LED is off
+
+	set_mode (gpio_deamon, SWITCH_GPIO, PI_INPUT);
+	set_pull_up_down (gpio_deamon, SWITCH_GPIO, PI_PUD_UP);	// Sets a pull-up
+	// benefits of pull-up is that way, no voltage are input in the pins; pins are only put to GND
+	return ON;
+}
 
 
 // you need to have root priviledges for it to work
+// do not use, use gpio deamon instead
+/*
 int kill_gpio ()
 {
 	gpioTerminate ();
+}
+*/
+
+int kill_gpio ()
+{
+	gpio_state = OFF;
+	pigpio_stop (gpio_deamon);
 }
 
 
@@ -48,20 +79,23 @@ int gpio_process () {
 	if (gpio_state == ON) {
 
 		// test switch value; if switch is pressed then value is LOW
-		if (gpioRead (SWITCH_GPIO) == OFF) {
+//		if (gpioRead (SWITCH_GPIO) == OFF) {
+		if (gpio_read (gpio_deamon, SWITCH_GPIO) == OFF) {
 			// anti_bounce mechanism: make sure the switch is not "bouncing", causing repeated ON-OFF in a short period
 			// no bounce if previous is 0
 			if ((previous == 0) || ((now-previous) >= ANTIBOUNCE_US))
 			{
 				previous_led = now;			// set time when led has been put on
-				gpioWrite (LED_GPIO, ON);	// turn LED ON
+//				gpioWrite (LED_GPIO, ON);	// turn LED ON
+				gpio_write (gpio_deamon, LED_GPIO, ON);	// turn LED ON
 				return TRUE;				// switch pressed, no bounce : exit function with press	OK
 			}
 		}
 
 		// check when to turn LED off : it is turned off when led is on for more than TIMEON_US
 	    if ((now - previous_led) > TIMEON_US) {
-			gpioWrite (LED_GPIO, OFF);	// turn LED OFF
+//			gpioWrite (LED_GPIO, OFF);	// turn LED OFF
+			gpio_write (gpio_deamon, LED_GPIO, OFF);	// turn LED OFF
 		}
 	}
 

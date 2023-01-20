@@ -14,6 +14,7 @@
 #include <dirent.h>
 #include <time.h>
 #include <pigpio.h>
+#include <pigpiod_if2.h>		// stupid pigpio cannot be run without beig root...
 #ifndef WIN32
 #include <unistd.h>
 #endif
