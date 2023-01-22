@@ -202,9 +202,9 @@ int main ( int argc, char *argv[] )
 
 
 #ifdef WIN32
-		Sleep ( 1000 );
+//		Sleep ( 1000 );
 #else
-		sleep ( 1 );
+//		sleep ( 1 );
 #endif
 	}
 
