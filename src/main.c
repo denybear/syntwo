@@ -160,6 +160,8 @@ int main ( int argc, char *argv[] )
 	settings = new_fluid_settings();
 
 	// settings for fluidsynth midi and audio
+	fluid_settings_setstr(settings, "audio.realtime-prio", "80");		// increase priority for getting more processing power
+
 	fluid_settings_setstr(settings, "audio.driver", "alsa");
 	fluid_settings_setstr(settings, "audio.alsa.device", audio_device);
 
@@ -180,7 +182,7 @@ int main ( int argc, char *argv[] )
 	adriver = new_fluid_audio_driver(settings, synth);
 
 	// start midi driver
-    mdriver = new_fluid_midi_driver(settings, handle_midi_event, (void *) synth);		// callback called every time a midi event is received from HW device
+    mdriver = new_fluid_midi_driver(settings, handle_midi_event_from_hw, (void *) synth);		// callback called every time a midi event is received from HW device
 
 	// create new player, but don't load anything for now
 	player = new_fluid_player(synth);

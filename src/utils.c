@@ -1,7 +1,6 @@
-/** @file process.c
+/** @file utils.c
  *
- * @brief The process callback for this JACK application is called in a
- * special realtime thread once for each audio cycle.
+ * @brief Utility functions benefiting to all the others.
  *
  */
 
@@ -70,8 +69,28 @@ printf ("midi:%s\n", name);
 					// create new player
 					player = new_fluid_player(synth);
 
+/////////////////////////////
+// assign a callback function for midi events going to the synth
+fluid_player_set_playback_callback (player, handle_midi_event_to_synth, (void *) synth);
+/////////////////////////////
+
+
 					// load midi file
 					fluid_player_add(player, name);
+
+/////////////////////////////
+// get default values for CC
+int i,cc;
+printf ("Default CC values after player_add() function:\n");
+for (i=0; i<16; i++) {
+	if (fluid_synth_get_cc (synth, i, 7, &cc) != FLUID_OK) cc = 0xFF;
+	printf ("CC7 - channel %02x - value %02x  |  ", i, cc);
+	if (fluid_synth_get_cc (synth, i, 8, &cc) != FLUID_OK) cc = 0xFF;
+	printf ("CC8 - channel %02x - value %02x\n", i, cc);
+}
+// end test of default values for CC
+/////////////////////////////
+
 
 					// set endless looping of current file
 					//fluid_player_set_loop (player, -1);
@@ -86,8 +105,21 @@ printf ("midi:%s\n", name);
 					memset (&marker [0], 0, sizeof (int) * NB_MARKER);
 					marker_pos = 0;
 
+/////////////////////////////
+// set default values for sliders and song volume: all values to max
+set_slider_value (0x7F);
+set_volume_value (0x7F);		// useless as it is done before play... but let's do it anyway
+// set default values for knobs and song balance: all values to middle
+set_knob_value (0x40);
+set_balance_value (0x40);		// useless as it is done before play... but let's do it anyway
+/////////////////////////////
+
+
+/////////////////////////////
+//NE PAS OUBLIER DE RETIRER CI-DESSOUS
 					// load a save of previous settings (sliders values, knobs...), if exists
-					load_song (new_midi_num);
+//					load_song (new_midi_num);
+/////////////////////////////
 
 					// we are at initial BPM, set leds accordingly
 					// this is useless as we cannot control the leds for now
@@ -175,7 +207,8 @@ int save_song (int numfile) {
 		for (i = 0; i < NB_CHANNEL; i++) {
 			k = i + (j * 8);
 
-			if (fluid_synth_get_cc (synth, k, 7, &cc) != FLUID_OK) cc = 0x40;
+			cc = channel [i][j].slider.value;
+//			if (fluid_synth_get_cc (synth, k, 7, &cc) != FLUID_OK) cc = 0x40;
 
 			// save current CC slider value
 			fprintf (fp, "slider %02X %02X\n", k, cc);
@@ -187,9 +220,10 @@ int save_song (int numfile) {
 		for (i = 0; i < NB_CHANNEL; i++) {
 			k = i + (j * 8);
 
-			if (fluid_synth_get_cc (synth, k, 8, &cc) != FLUID_OK) cc = 0x40;
+			cc = channel [i][j].knob.value;
+//			if (fluid_synth_get_cc (synth, k, 8, &cc) != FLUID_OK) cc = 0x40;
 
-			// save current CC slider value
+			// save current CC knob value
 			fprintf (fp, "knob %02X %02X\n", k, cc);
 		}
 	}
@@ -257,7 +291,8 @@ int load_song (int numfile) {
 			// load current CC slider value
 			fscanf (fp, "slider %02X %02X\n", &k, &cc);
 			// assign
-			fluid_synth_cc (synth, k, 7, cc);
+			channel [i][j].slider.value = cc;
+//			fluid_synth_cc (synth, k, 7, cc);
 		}
 	}
 
@@ -268,7 +303,8 @@ int load_song (int numfile) {
 			// load current CC knob value
 			fscanf (fp, "knob %02X %02X\n", &k, &cc);
 			// assign
-			fluid_synth_cc (synth, k, 8, cc);
+			channel [i][j].knob.value = cc;
+//			fluid_synth_cc (synth, k, 8, cc);
 		}
 	}
 
@@ -287,3 +323,91 @@ int load_song (int numfile) {
 }
 
 
+// set default values for sliders
+int set_slider_value (uint8_t val) {
+
+	int i,j;
+	
+	for (j = 0; j < NB_RECSHIFT; j++) {
+		for (i = 0; i < NB_CHANNEL; i++) {
+			// slider values to "val"
+			channel [i][j].slider.value = val;
+		}
+	}
+}
+
+
+// set default values for song volume (per channel)
+int set_volume_value (uint8_t val) {
+
+	int i,j;
+	
+	for (j = 0; j < NB_RECSHIFT; j++) {
+		for (i = 0; i < NB_CHANNEL; i++) {
+			// channels volume to "val"
+			channel [i][j].slider.value_rt = val;
+		}
+	}
+}
+
+
+// send CC7 to reset song volume, according to real-time channel volume and sliders positions
+// this basically consists in sending a CC7 for each channel; callback will intercept this CC7 and adjust volume according to slider position
+int reset_song_volume () {
+
+	int i,j,k;
+	
+	for (j = 0; j < NB_RECSHIFT; j++) {
+		for (i = 0; i < NB_CHANNEL; i++) {
+			// k is the channel number
+			k = i + (j * 8);
+			// send CC7 with current volume for the channel
+			fluid_synth_cc (synth, k, 7, channel [i][j].slider.value_rt);
+		}
+	}
+}
+
+
+// set default values for knobs
+int set_knob_value (uint8_t val) {
+
+	int i,j;
+	
+	for (j = 0; j < NB_RECSHIFT; j++) {
+		for (i = 0; i < NB_CHANNEL; i++) {
+			// knob values to "val"
+			channel [i][j].knob.value = val;
+		}
+	}
+}
+
+
+// set default values for song balance (per channel)
+int set_balance_value (uint8_t val) {
+
+	int i,j;
+	
+	for (j = 0; j < NB_RECSHIFT; j++) {
+		for (i = 0; i < NB_CHANNEL; i++) {
+			// channels balance to "val"
+			channel [i][j].knob.value_rt = val;
+		}
+	}
+}
+
+
+// send CC8 to reset song balance, according to real-time channel balance and knobs positions
+// this basically consists in sending a CC8 for each channel; callback will intercept this CC8 and adjust balance according to knob position
+int reset_song_balance () {
+
+	int i,j,k;
+	
+	for (j = 0; j < NB_RECSHIFT; j++) {
+		for (i = 0; i < NB_CHANNEL; i++) {
+			// k is the channel number
+			k = i + (j * 8);
+			// send CC8 with current balance for the channel
+			fluid_synth_cc (synth, k, 8, channel [i][j].knob.value_rt);
+		}
+	}
+}

@@ -29,6 +29,8 @@ int process_record (void *, uint8_t *);
 int process_set (void *, uint8_t *);
 int process_marker_l (void *, uint8_t *);
 int process_marker_r (void *, uint8_t *);
-int handle_midi_event(void*, fluid_midi_event_t*);
+int handle_midi_event_from_hw (void*, fluid_midi_event_t*);
+int handle_midi_event_to_synth (void*, fluid_midi_event_t*);
+
 
 

@@ -22,16 +22,18 @@ int process (void *control, uint8_t *data)
 // process function called everytime slide is actionned
 int process_slider (void *control, uint8_t *data)
 {
+
 	slider_t *ctrl;
 	ctrl = control;
 
 //	printf ("SLIDER: %02X %02X %02X\n", data[0], data [1], data [2]);
 
-	// get value from the midi control
+	// get new slider value from the midi control
 	ctrl->value = data[2];
 	// send CC7 (sound control) to synthetizer
 	// data[1] is the channel number
-	fluid_synth_cc (synth, data[1], 7, ctrl->value);
+	// we send the current channel volume to synth; callback function will ponderate the real value with slider value
+	fluid_synth_cc (synth, data[1], 7, ctrl->value_rt);
 
 	return FLUID_OK;
 }
@@ -48,7 +50,8 @@ int process_slider_shift (void *control, uint8_t *data)
 	ctrl->value = data[2];
 	// send CC7 (sound control) to synthetizer
 	// data[1] is the channel number
-	fluid_synth_cc (synth, data[1]+0x08, 7, ctrl->value);
+	// we send the current channel volume to synth; callback function will ponderate the real value with slider value
+	fluid_synth_cc (synth, data[1]+0x08, 7, ctrl->value_rt);
 
 	return FLUID_OK;
 }
@@ -65,7 +68,8 @@ int process_knob (void *control, uint8_t *data)
 	ctrl->value = data[2];
 	// send CC8 (balance) to synthetizer
 	// data[1] is the channel number
-	fluid_synth_cc (synth, data[1]-0x10, 8, ctrl->value);
+	// we send the current channel balance to synth; callback function will ponderate the real value with knob value
+	fluid_synth_cc (synth, data[1]-0x10, 8, ctrl->value_rt);
 
 	return FLUID_OK;
 }
@@ -82,7 +86,8 @@ int process_knob_shift (void *control, uint8_t *data)
 	ctrl->value = data[2];
 	// send CC8 (balance) to synthetizer
 	// data[1] is the channel number
-	fluid_synth_cc (synth, data[1]-0x10+0x08, 8, ctrl->value);
+	// we send the current channel balance to synth; callback function will ponderate the real value with knob value
+	fluid_synth_cc (synth, data[1]-0x10+0x08, 8, ctrl->value_rt);
 
 	return FLUID_OK;
 }
@@ -113,14 +118,19 @@ int process_solo (void *control, uint8_t *data)
 			for (j=0; j<NB_RECSHIFT; j++) {
 				k = i + (j * 8);
 
-				if (fluid_synth_get_cc (synth, k, 7, &cc) != FLUID_OK) cc = 0x40;
-				// save current CC value to the corresponding slider
-				channel[i][j].slider.value_s = cc;
+				// save current slider value to the corresponding slider_s
+				channel[i][j].slider.value_s = channel[i][j].slider.value;
+
 				// send CC7 (sound control) to synthetizer as 0 to mute the channel
 				// for all channels but ch (current channel number)
 				if (ch != k) {
-					fluid_synth_cc (synth, k, 7, 0);
-					channel[i][j].slider.value = 0;		// set actual value for this slider
+					// set slider value to 0 to mute the channel
+					channel[i][j].slider.value = 0x00;
+					// send CC7 (sound control) to synthetizer to mute the channel
+					// k is the channel number
+					// use real-time volume value as value of CC7
+					// channel will be muted as slider value has been forced to 0
+					fluid_synth_cc (synth, k, 7, channel [i][j].slider.value_rt);
 				}
 			}
 		}
@@ -132,13 +142,16 @@ int process_solo (void *control, uint8_t *data)
 			for (j=0; j<NB_RECSHIFT; j++) {
 				k = i + (j * 8);
 
-				// get current CC value from corresponding slider
-				cc = channel[i][j].slider.value_s;
 				// send CC7 (sound control) to synthetizer as cc value to unmute the channel
 				// for all channels but ch (current channel number)
 				if (ch != k) {
-					fluid_synth_cc (synth, k, 7, cc);
-					channel[i][j].slider.value = cc;		// set actual value for this slider
+					// get current slider value from the corresponding slider value_s
+					channel[i][j].slider.value = channel[i][j].slider.value_s;
+					// send CC7 (sound control) to synthetizer to unmute the channel
+					// k is the channel number
+					// use real-time volume value as value of CC7
+					// channel will be unmuted as slider value has been restored
+					fluid_synth_cc (synth, k, 7, channel [i][j].slider.value_rt);
 				}
 			}
 		}
@@ -173,14 +186,19 @@ int process_solo_shift (void *control, uint8_t *data)
 			for (j=0; j<NB_RECSHIFT; j++) {
 				k = i + (j * 8);
 
-				if (fluid_synth_get_cc (synth, k, 7, &cc) != FLUID_OK) cc = 0x40;
-				// save current CC value to the corresponding slider
-				channel[i][j].slider.value_s = cc;
+				// save current slider value to the corresponding slider_s
+				channel[i][j].slider.value_s = channel[i][j].slider.value;
+
 				// send CC7 (sound control) to synthetizer as 0 to mute the channel
 				// for all channels but ch (current channel number)
 				if (ch != k) {
-					fluid_synth_cc (synth, k, 7, 0);
-					channel[i][j].slider.value = 0;		// set actual value for this slider
+					// set slider value to 0 to mute the channel
+					channel[i][j].slider.value = 0x00;
+					// send CC7 (sound control) to synthetizer to mute the channel
+					// k is the channel number
+					// use real-time volume value as value of CC7
+					// channel will be muted as slider value has been forced to 0
+					fluid_synth_cc (synth, k, 7, channel [i][j].slider.value_rt);
 				}
 			}
 		}
@@ -192,13 +210,16 @@ int process_solo_shift (void *control, uint8_t *data)
 			for (j=0; j<NB_RECSHIFT; j++) {
 				k = i + (j * 8);
 
-				// get current CC value from corresponding slider
-				cc = channel[i][j].slider.value_s;
 				// send CC7 (sound control) to synthetizer as cc value to unmute the channel
 				// for all channels but ch (current channel number)
 				if (ch != k) {
-					fluid_synth_cc (synth, k, 7, cc);
-					channel[i][j].slider.value = cc;		// set actual value for this slider
+					// get current slider value from the corresponding slider value_s
+					channel[i][j].slider.value = channel[i][j].slider.value_s;
+					// send CC7 (sound control) to synthetizer to unmute the channel
+					// k is the channel number
+					// use real-time volume value as value of CC7
+					// channel will be unmuted as slider value has been restored
+					fluid_synth_cc (synth, k, 7, channel [i][j].slider.value_rt);
 				}
 			}
 		}
@@ -211,7 +232,7 @@ int process_solo_shift (void *control, uint8_t *data)
 // TOGGLE MODE ON
 int process_mute (void *control, uint8_t *data)
 {
-	int i, cc;
+	int i;
 	button_t *ctrl;
 	ctrl = control;
 	
@@ -227,23 +248,24 @@ int process_mute (void *control, uint8_t *data)
 
 	if (ctrl->value) {
 		// mute ON
-		// get current value of CC7 of channel; if no value set, then fix arbitrary value to 64
-		if (fluid_synth_get_cc (synth, i, 7, &cc) != FLUID_OK) cc = 0x40;
-		// save current CC value to the corresponding slider
-		channel[i][0].slider.value_m = cc;
-		// send CC7 (sound control) to synthetizer as 0 to mute the channel
+		// save current slider value to the corresponding slider_m
+		channel[i][0].slider.value_m = channel[i][0].slider.value;
+		// set slider value to 0 to mute the channel
+		channel[i][0].slider.value = 0x00;
+		// send CC7 (sound control) to synthetizer to mute the channel
 		// i is the channel number
-		fluid_synth_cc (synth, i, 7, 0);
-		channel[i][0].slider.value = 0;		// set actual value for this slider
+		// use real-time volume value as value of CC7
+		// channel will be muted as slider value has been forced to 0
+		fluid_synth_cc (synth, i, 7, channel [i][0].slider.value_rt);
 	}
 	else {
 		// mute OFF
-		// get current CC value from the corresponding slider
-		cc = channel[i][0].slider.value_m;
-		// send CC7 (sound control) to synthetizer as cc value to unmute the channel
+		// get current slider value from the corresponding slider value_m
+		channel[i][0].slider.value = channel[i][0].slider.value_m;
+		// send CC7 (sound control) to synthetizer to unmute the channel
 		// i is the channel number
-		fluid_synth_cc (synth, i, 7, cc);
-		channel[i][0].slider.value = cc;		// set actual value for this slider
+		// use real-time volume value as value of CC7
+		fluid_synth_cc (synth, i, 7, channel [i][0].slider.value_rt);
 	}
 
 	return FLUID_OK;
@@ -253,7 +275,7 @@ int process_mute (void *control, uint8_t *data)
 // TOGGLE MODE ON
 int process_mute_shift (void *control, uint8_t *data)
 {
-	int i, cc;
+	int i;
 	button_t *ctrl;
 	ctrl = control;
 	
@@ -269,24 +291,24 @@ int process_mute_shift (void *control, uint8_t *data)
 
 	if (ctrl->value) {
 		// mute ON
-		// get current value of CC7 of channel; if no value set, then fix arbitrary value to 64
-		if (fluid_synth_get_cc (synth, i, 7, &cc) != FLUID_OK) cc = 0x40;
-		// save current CC value to the corresponding slider
-		channel[i-0x08][1].slider.value_m = cc;
-		// send CC7 (sound control) to synthetizer as 0 to mute the channel
+		// save current slider value to the corresponding slider_m
+		channel[i-0x08][1].slider.value_m = channel[i-0x08][1].slider.value;
+		// set slider value to 0 to mute the channel
+		channel[i-0x08][1].slider.value = 0x00;
+		// send CC7 (sound control) to synthetizer to mute the channel
 		// i is the channel number
-		fluid_synth_cc (synth, i, 7, 0);
-		channel[i-0x08][1].slider.value = 0;		// set actual value for this slider
-
+		// use real-time volume value as value of CC7
+		// channel will be muted as slider value has been forced to 0
+		fluid_synth_cc (synth, i, 7, channel [i-0x08][1].slider.value_rt);
 	}
 	else {
 		// mute OFF
-		// get current CC value from the corresponding slider
-		cc = channel[i-0x08][1].slider.value_m;
-		// send CC7 (sound control) to synthetizer as cc value to unmute the channel
+		// get current slider value from the corresponding slider value_m
+		channel[i-0x08][1].slider.value = channel[i-0x08][1].slider.value_m;
+		// send CC7 (sound control) to synthetizer to unmute the channel
 		// i is the channel number
-		fluid_synth_cc (synth, i, 7, cc);
-		channel[i-0x08][1].slider.value_m = cc;		// set actual value for this slider
+		// use real-time volume value as value of CC7
+		fluid_synth_cc (synth, i, 7, channel [i-0x08][1].slider.value_rt);
 	}
 
 	return FLUID_OK;
@@ -606,8 +628,36 @@ int process_play (void *control, uint8_t *data)
 		marker_pos = 0;
 		// rewind to the beggining of the file
 		fluid_player_seek (player, 0);
+
+/////////////////////////////
+//NE PAS OUBLIER DE RETIRER les comments CI-DESSOUS
+// set channels' real-time volume to max 
+set_volume_value (0x7F);
+set_balance_value (0x40);
+// send channels' real-time volume to synth (to reset volume according to slider values)
+//reset_song_volume ();
+// send channels' real-time balance to synth (to reset balance according to knob values)
+//reset_song_balance ();
+/////////////////////////////
+
+
 		// play the midi files, if any
 		fluid_player_play (player);
+
+		
+/////////////////////////////
+// get default values for CC
+int i,cc;
+printf ("Default CC values after player_play() function:\n");
+for (i=0; i<16; i++) {
+	if (fluid_synth_get_cc (synth, i, 7, &cc) != FLUID_OK) cc = 0xFF;
+	printf ("CC7 - channel %02x - value %02x  |  ", i, cc);
+	if (fluid_synth_get_cc (synth, i, 8, &cc) != FLUID_OK) cc = 0xFF;
+	printf ("CC8 - channel %02x - value %02x\n", i, cc);
+}
+// end test of default values for CC
+/////////////////////////////
+		
 	}
 
 	// no need to update value of ctrl (it is not used)
@@ -750,8 +800,8 @@ int process_marker_r (void *control, uint8_t *data)
 	return FLUID_OK;
 }
 
-// fluid callback called every time a MIDI message is received
-int handle_midi_event(void* data, fluid_midi_event_t* event)
+// fluid callback called every time a MIDI message is received from hardware device
+int handle_midi_event_from_hw(void* data, fluid_midi_event_t* event)
 {
 	fluid_synth_t* s;
 	int i;
@@ -818,8 +868,59 @@ int handle_midi_event(void* data, fluid_midi_event_t* event)
 		if (memcmp (chan->rec.message, mididata, 2)==0) return chan->rec.action (&(chan->rec), mididata);
 	}
 
-//	fluid_synth_handle_midi_event((fluid_synth_t*) data, event);
-
 	return FLUID_OK;
 }
 
+/////////////////////////////
+// fluid callback called every time a MIDI message is to be sent to the synth
+// we use this call to intercept Volume and Balance CC, so the requested vol and bal values are ponderated by
+// corresponding slider and knob position
+// to activate this callback, use the statement:
+// fluid_player_set_playback_callback (player, handle_midi_event_to_synth, (void *) synth);
+int handle_midi_event_to_synth(void* data, fluid_midi_event_t* event)
+{
+	channel_t *chan;			// intermediate struct to simplify code lisibility
+	float a;					// temp variable to manage volume
+	int b;						// temp variable to manage balance
+
+	// process midi event here
+	// we only want to process CC messages
+	if (event->type == CONTROL_CHANGE) {
+
+		// point to the right channel
+		if (event->channel <8) chan = & (channel [event->channel] [0]);
+		else chan = & (channel [(event->channel)-8] [1]);
+
+		// process volume (CC7)
+		if (event->param1 == 7) {
+			printf ("VOLUME  CHANGE %02x %02x %02x\n", event->channel, event->param1, event->param2);
+			// first, save received CC7 value as the real-time volume
+			chan->slider.value_rt = event->param2;	// we have received volume event, save the new requested value for the volume 
+
+			// ponderate the volume with slider position before sending CC7 to synth
+			a = chan->slider.value / 127.0f;		// slider value is now a value between 0 and 1 in float
+			a *= event->param2						// incoming CC7 volume value is adjusted according to slider value
+			event->param2 = (uint8_t) a;			// set new volume value in CC
+			printf ("         MODIF %02x %02x %02x\n", event->channel, event->param1, event->param2);
+		}
+		
+		if (event->param1 == 8) {
+			printf ("BALANCE CHANGE %02x %02x %02x\n", event->channel, event->param1, event->param2);
+			// first, save received CC8 value as the real-time balance
+			chan->knob.value_rt = event->param2;	// we have received balance event, save the new requested value for the balance 
+
+			// ponderate the balance with knob position before sending CC8 to synth
+			b = (chan->knob.value) - 0x40;			// b has values from -64 to +63
+			b += event->param2;						// incoming CC8 balance value is ajusted according to knob value
+			if (b < 0) b = 0;						// test upper and lower values
+			if (b > 0x7f) b = 0x7f;
+			event->param2 = (uint8_t) b;			// set new balance value in CC
+			printf ("         MODIF %02x %02x %02x\n", event->channel, event->param1, event->param2);
+		}
+	}
+	
+	// data shall be fluidsynth instance
+	// proceed with standard handling of midi events by the synth
+	return fluid_synth_handle_midi_event((fluid_synth_t*) data, event);
+}
+/////////////////////////////
