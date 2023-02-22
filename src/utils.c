@@ -78,20 +78,6 @@ fluid_player_set_playback_callback (player, handle_midi_event_to_synth, (void *)
 					// load midi file
 					fluid_player_add(player, name);
 
-/////////////////////////////
-// get default values for CC
-int i,cc;
-printf ("Default CC values after player_add() function:\n");
-for (i=0; i<16; i++) {
-	if (fluid_synth_get_cc (synth, i, 7, &cc) != FLUID_OK) cc = 0xFF;
-	printf ("CC7 - channel %02x - value %02x  |  ", i, cc);
-	if (fluid_synth_get_cc (synth, i, 8, &cc) != FLUID_OK) cc = 0xFF;
-	printf ("CC8 - channel %02x - value %02x\n", i, cc);
-}
-// end test of default values for CC
-/////////////////////////////
-
-
 					// set endless looping of current file
 					//fluid_player_set_loop (player, -1);
 
@@ -114,12 +100,8 @@ set_knob_value (0x40);
 set_balance_value (0x40);		// useless as it is done before play... but let's do it anyway
 /////////////////////////////
 
-
-/////////////////////////////
-//NE PAS OUBLIER DE RETIRER CI-DESSOUS
 					// load a save of previous settings (sliders values, knobs...), if exists
-//					load_song (new_midi_num);
-/////////////////////////////
+					load_song (new_midi_num);
 
 					// we are at initial BPM, set leds accordingly
 					// this is useless as we cannot control the leds for now
@@ -356,13 +338,18 @@ int set_volume_value (uint8_t val) {
 int reset_song_volume () {
 
 	int i,j,k;
+	uint8_t vol;
 	
 	for (j = 0; j < NB_RECSHIFT; j++) {
 		for (i = 0; i < NB_CHANNEL; i++) {
 			// k is the channel number
 			k = i + (j * 8);
-			// send CC7 with current volume for the channel
-			fluid_synth_cc (synth, k, 7, channel [i][j].slider.value_rt);
+
+			// ponderate real-time volume value according to slider position
+			vol = adjust_volume (channel [i][j].slider.value, channel [i][j].slider.value_rt);
+
+			// send CC7 with current ponderated volume for the channel
+			fluid_synth_cc (synth, k, 7, vol);
 		}
 	}
 }
@@ -401,13 +388,18 @@ int set_balance_value (uint8_t val) {
 int reset_song_balance () {
 
 	int i,j,k;
+	uint8_t bal;
 	
 	for (j = 0; j < NB_RECSHIFT; j++) {
 		for (i = 0; i < NB_CHANNEL; i++) {
 			// k is the channel number
 			k = i + (j * 8);
-			// send CC8 with current balance for the channel
-			fluid_synth_cc (synth, k, 8, channel [i][j].knob.value_rt);
+
+			// ponderate real-time balance value according to knob position
+			bal = adjust_balance (channel [i][j].knob.value, channel [i][j].knob.value_rt);
+
+			// send CC8 with current ponderated balance for the channel
+			fluid_synth_cc (synth, k, 8, bal);
 		}
 	}
 }

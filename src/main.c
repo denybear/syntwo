@@ -160,7 +160,7 @@ int main ( int argc, char *argv[] )
 	settings = new_fluid_settings();
 
 	// settings for fluidsynth midi and audio
-	fluid_settings_setstr(settings, "audio.realtime-prio", "80");		// increase priority for getting more processing power
+	fluid_settings_setint(settings, "audio.realtime-prio", 80);		// increase priority for getting more processing power
 
 	fluid_settings_setstr(settings, "audio.driver", "alsa");
 	fluid_settings_setstr(settings, "audio.alsa.device", audio_device);
