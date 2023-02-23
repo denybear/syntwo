@@ -71,20 +71,20 @@ int process_knob (void *control, uint8_t *data)
 {
 	knob_t *ctrl;
 	ctrl = control;
-	uint8_t bal;
+	uint8_t pan;
 
 //	printf ("KNOB: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get value from the midi control
 	ctrl->value = data[2];
 
-	// ponderate real-time balance value according to knob position
-	bal = adjust_balance (ctrl->value, ctrl->value_rt);
+	// ponderate real-time panning value according to knob position
+	pan = adjust_panning (ctrl->value, ctrl->value_rt);
 
-	// send CC8 (balance) to synthetizer
+	// send CC10 (panning) to synthetizer
 	// data[1]-0x10 is the channel number
-	// we send the current channel balance to synth
-	fluid_synth_cc (synth, data[1]-0x10, 8, bal);
+	// we send the current channel panning to synth
+	fluid_synth_cc (synth, data[1]-0x10, 10, pan);
 
 	return FLUID_OK;
 }
@@ -94,20 +94,20 @@ int process_knob_shift (void *control, uint8_t *data)
 {
 	knob_t *ctrl;
 	ctrl = control;
-	uint8_t bal;
+	uint8_t pan;
 
 //	printf ("KNOB_SHIFT: %02X %02X %02X\n", data[0], data [1], data [2]);
 
 	// get value from the midi control
 	ctrl->value = data[2];
 
-	// ponderate real-time balance value according to knob position
-	bal = adjust_balance (ctrl->value, ctrl->value_rt);
+	// ponderate real-time panning value according to knob position
+	pan = adjust_panning (ctrl->value, ctrl->value_rt);
 
-	// send CC8 (balance) to synthetizer
+	// send CC10 (panning) to synthetizer
 	// data[1]-0x10+0x08 is the channel number
-	// we send the current channel balance to synth
-	fluid_synth_cc (synth, data[1]-0x10+0x08, 8, bal);
+	// we send the current channel panning to synth
+	fluid_synth_cc (synth, data[1]-0x10+0x08, 10, pan);
 
 	return FLUID_OK;
 }
@@ -670,16 +670,13 @@ int process_play (void *control, uint8_t *data)
 		// rewind to the beggining of the file
 		fluid_player_seek (player, 0);
 
-/////////////////////////////
-// set channels' real-time volume to max 
-set_volume_value (0x7F);
-set_balance_value (0x40);
-// send channels' real-time volume to synth (to reset volume according to slider values)
-reset_song_volume ();
-// send channels' real-time balance to synth (to reset balance according to knob values)
-reset_song_balance ();
-/////////////////////////////
-
+		// set channels' real-time volume to max 
+		set_volume_value (0x7F);
+		set_panning_value (0x40);
+		// send channels' real-time volume to synth (to reset volume according to slider values)
+		reset_song_volume ();
+		// send channels' real-time panning to synth (to reset panning according to knob values)
+		reset_song_panning ();
 
 		// play the midi files, if any
 		fluid_player_play (player);
@@ -896,9 +893,9 @@ int handle_midi_event_from_hw(void* data, fluid_midi_event_t* event)
 	return FLUID_OK;
 }
 
-/////////////////////////////
+
 // fluid callback called every time a MIDI message is to be sent to the synth
-// we use this call to intercept Volume and Balance CC, so the requested vol and bal values are ponderated by
+// we use this call to intercept Volume and panning CC, so the requested vol and pan values are ponderated by
 // corresponding slider and knob position
 // to activate this callback, use the statement:
 // fluid_player_set_playback_callback (player, handle_midi_event_to_synth, (void *) synth);
@@ -922,25 +919,26 @@ int handle_midi_event_to_synth(void* data, fluid_midi_event_t* event)
 
 		// process volume (CC7)
 		if (econtrol == 7) {
-			printf ("VOLUME  CHANGE %02x %02x %02x\n", echannel, econtrol, evalue);
+//			printf ("VOL CHANGE %02x %02x %02x\n", echannel, econtrol, evalue);
 			// first, save received CC7 value as the real-time volume
 			chan->slider.value_rt = evalue;			// we have received volume event, save the new requested value for the volume 
 
 			// calculate new value for CC7, ponderated by slider position
 			evalue = adjust_volume (chan->slider.value, chan->slider.value_rt);
 			fluid_midi_event_set_value (event, evalue);
-			printf ("         MODIF %02x %02x %02x\n", echannel, econtrol, evalue);
+//			printf ("     MODIF %02x %02x %02x\n", echannel, econtrol, evalue);
 		}
 		
-		if (econtrol == 8) {
-			printf ("BALANCE CHANGE %02x %02x %02x\n", echannel, econtrol, evalue);
-			// first, save received CC8 value as the real-time balance
-			chan->knob.value_rt = evalue;			// we have received balance event, save the new requested value for the balance 
+		// process pan (CC10)
+		if (econtrol == 10) {
+//			printf ("PAN CHANGE %02x %02x %02x\n", echannel, econtrol, evalue);
+			// first, save received CC10 value as the real-time panning
+			chan->knob.value_rt = evalue;			// we have received panning event, save the new requested value for the panning 
 
-			// calculate new value for CC8, ponderated by knob position
-			evalue = adjust_balance (chan->knob.value, chan->knob.value_rt);
+			// calculate new value for CC10, ponderated by knob position
+			evalue = adjust_panning (chan->knob.value, chan->knob.value_rt);
 			fluid_midi_event_set_value (event, evalue);
-			printf ("         MODIF %02x %02x %02x\n", echannel, econtrol, evalue);
+//			printf ("     MODIF %02x %02x %02x\n", echannel, econtrol, evalue);
 		}
 	}
 	
@@ -948,6 +946,7 @@ int handle_midi_event_to_synth(void* data, fluid_midi_event_t* event)
 	// proceed with standard handling of midi events by the synth
 	return fluid_synth_handle_midi_event((fluid_synth_t*) data, event);
 }
+
 
 // ponderate volume value with slider position, and return this to be set as value of cc
 uint8_t adjust_volume (uint8_t sld, uint8_t vol) {
@@ -962,18 +961,18 @@ uint8_t adjust_volume (uint8_t sld, uint8_t vol) {
 	return res;
 }
 
-// ponderate balance value with knob position, and return this to be set as value of cc
-uint8_t adjust_balance (uint8_t knb, uint8_t bal) {
-	int a;								// temp variable to manage balance
+
+// ponderate panning value with knob position, and return this to be set as value of cc
+uint8_t adjust_panning (uint8_t knb, uint8_t pan) {
+	int a;								// temp variable to manage panning
 	uint8_t res=0;
 
 	// ponderate the volume with slider position before sending CC7 to synth
 	a = knb - 0x40;						// a has values from -64 to +63
-	a += bal;							// incoming CC8 balance value is ajusted according to knob value
+	a += pan;							// incoming CC10 panning value is ajusted according to knob value
 	if (a < 0) a = 0;					// test upper and lower values
 	if (a > 0x7f) a = 0x7f;
 	res = (uint8_t) a;					// set new volume value to be sent in CC
 
 	return res;
 }
-/////////////////////////////

@@ -14,5 +14,5 @@ int set_slider_value (uint8_t);
 int set_volume_value (uint8_t);
 int reset_song_volume ();
 int set_knob_value (uint8_t);
-int set_balance_value (uint8_t);
-int reset_song_balance ();
+int set_panning_value (uint8_t);
+int reset_song_panning ();

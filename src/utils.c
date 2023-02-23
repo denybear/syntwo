@@ -69,11 +69,8 @@ printf ("midi:%s\n", name);
 					// create new player
 					player = new_fluid_player(synth);
 
-/////////////////////////////
-// assign a callback function for midi events going to the synth
-fluid_player_set_playback_callback (player, handle_midi_event_to_synth, (void *) synth);
-/////////////////////////////
-
+					// assign a callback function for midi events going to the synth
+					fluid_player_set_playback_callback (player, handle_midi_event_to_synth, (void *) synth);
 
 					// load midi file
 					fluid_player_add(player, name);
@@ -91,14 +88,12 @@ fluid_player_set_playback_callback (player, handle_midi_event_to_synth, (void *)
 					memset (&marker [0], 0, sizeof (int) * NB_MARKER);
 					marker_pos = 0;
 
-/////////////////////////////
-// set default values for sliders and song volume: all values to max
-set_slider_value (0x7F);
-set_volume_value (0x7F);		// useless as it is done before play... but let's do it anyway
-// set default values for knobs and song balance: all values to middle
-set_knob_value (0x40);
-set_balance_value (0x40);		// useless as it is done before play... but let's do it anyway
-/////////////////////////////
+					// set default values for sliders and song volume: all values to max
+					set_slider_value (0x64);
+					set_volume_value (0x7F);		// useless as it is done before play... but let's do it anyway
+					// set default values for knobs and song panning: all values to middle
+					set_knob_value (0x40);
+					set_panning_value (0x40);		// useless as it is done before play... but let's do it anyway
 
 					// load a save of previous settings (sliders values, knobs...), if exists
 					load_song (new_midi_num);
@@ -190,7 +185,6 @@ int save_song (int numfile) {
 			k = i + (j * 8);
 
 			cc = channel [i][j].slider.value;
-//			if (fluid_synth_get_cc (synth, k, 7, &cc) != FLUID_OK) cc = 0x40;
 
 			// save current CC slider value
 			fprintf (fp, "slider %02X %02X\n", k, cc);
@@ -203,7 +197,6 @@ int save_song (int numfile) {
 			k = i + (j * 8);
 
 			cc = channel [i][j].knob.value;
-//			if (fluid_synth_get_cc (synth, k, 8, &cc) != FLUID_OK) cc = 0x40;
 
 			// save current CC knob value
 			fprintf (fp, "knob %02X %02X\n", k, cc);
@@ -274,7 +267,6 @@ int load_song (int numfile) {
 			fscanf (fp, "slider %02X %02X\n", &k, &cc);
 			// assign
 			channel [i][j].slider.value = cc;
-//			fluid_synth_cc (synth, k, 7, cc);
 		}
 	}
 
@@ -286,7 +278,6 @@ int load_song (int numfile) {
 			fscanf (fp, "knob %02X %02X\n", &k, &cc);
 			// assign
 			channel [i][j].knob.value = cc;
-//			fluid_synth_cc (synth, k, 8, cc);
 		}
 	}
 
@@ -369,37 +360,37 @@ int set_knob_value (uint8_t val) {
 }
 
 
-// set default values for song balance (per channel)
-int set_balance_value (uint8_t val) {
+// set default values for song panning (per channel)
+int set_panning_value (uint8_t val) {
 
 	int i,j;
 	
 	for (j = 0; j < NB_RECSHIFT; j++) {
 		for (i = 0; i < NB_CHANNEL; i++) {
-			// channels balance to "val"
+			// channels panning to "val"
 			channel [i][j].knob.value_rt = val;
 		}
 	}
 }
 
 
-// send CC8 to reset song balance, according to real-time channel balance and knobs positions
-// this basically consists in sending a CC8 for each channel; callback will intercept this CC8 and adjust balance according to knob position
-int reset_song_balance () {
+// send CC10 to reset song panning, according to real-time channel panning and knobs positions
+// this basically consists in sending a CC10 for each channel; callback will intercept this CC10 and adjust panning according to knob position
+int reset_song_panning () {
 
 	int i,j,k;
-	uint8_t bal;
+	uint8_t pan;
 	
 	for (j = 0; j < NB_RECSHIFT; j++) {
 		for (i = 0; i < NB_CHANNEL; i++) {
 			// k is the channel number
 			k = i + (j * 8);
 
-			// ponderate real-time balance value according to knob position
-			bal = adjust_balance (channel [i][j].knob.value, channel [i][j].knob.value_rt);
+			// ponderate real-time panning value according to knob position
+			pan = adjust_panning (channel [i][j].knob.value, channel [i][j].knob.value_rt);
 
-			// send CC8 with current ponderated balance for the channel
-			fluid_synth_cc (synth, k, 8, bal);
+			// send CC10 with current ponderated panning for the channel
+			fluid_synth_cc (synth, k, 10, pan);
 		}
 	}
 }

@@ -32,5 +32,5 @@ int process_marker_r (void *, uint8_t *);
 int handle_midi_event_from_hw (void*, fluid_midi_event_t*);
 int handle_midi_event_to_synth (void*, fluid_midi_event_t*);
 uint8_t adjust_volume (uint8_t, uint8_t); 
-uint8_t adjust_balance (uint8_t, uint8_t);
+uint8_t adjust_panning (uint8_t, uint8_t);
 
